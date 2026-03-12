@@ -1,0 +1,75 @@
+name: Package Application with Pyinstaller and Release
+
+on:
+  push:
+    tags:
+      - "v*.*.*"
+
+jobs:
+  build-win64:
+    runs-on: windows-latest
+    steps:
+      - name: (Install) python
+        uses: actions/setup-python@v4
+        with:
+          python-version: "3.12"
+          architecture: "x64"
+
+      - name: (Install) python dev tools
+        shell: bash
+        run: python -m pip install pip wheel setuptools
+
+      - name: Checkout repository
+        uses: actions/checkout@v4
+
+      - name: (Install) dependencies
+        run: python -m pip install -r "requirements_win64.txt"
+        shell: bash
+
+      - name: (Install) pyinstaller
+        shell: bash
+        run: |
+          set PYINSTALLER_COMPILE_BOOTLOADER=TRUE
+          pip install pyinstaller
+
+      - name: (Create) Executable
+        shell: bash
+        run: |
+          pyinstaller \
+            --clean \
+            --noconfirm \
+            rok_tracker.spec
+
+          echo "✔️ Executables created successfully" >> $GITHUB_STEP_SUMMARY
+          echo "  - Python version used: '3.12'" >> $GITHUB_STEP_SUMMARY
+          echo "  - Python architecture used: 'x64'" >> $GITHUB_STEP_SUMMARY
+
+      - name: Prepare executable for upload
+        run: |
+          cp "config.json" "dist/RoK Tracker/config.json"
+          mkdir "dist/RoK Tracker/deps"
+          cp -r "deps/inputs/" "dist/RoK Tracker/deps/"
+          tar.exe -a -c -f "RoK Tracker.zip" -C "dist/" "RoK Tracker"
+
+      - name: Upload Artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: RoK Tracker
+          path: "RoK Tracker.zip"
+
+  release:
+    runs-on: ubuntu-latest
+    needs:
+      - build-win64
+
+    steps:
+      - name: Get compiled executables
+        uses: actions/download-artifact@v4
+        with:
+          name: RoK Tracker
+
+      - name: Release
+        uses: softprops/action-gh-release@v0.1.15
+        with:
+          files: |
+            RoK Tracker.zip
