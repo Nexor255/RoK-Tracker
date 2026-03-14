@@ -26,6 +26,7 @@ from roktracker.kingdom.scanner import KingdomScanner, scan_preset_to_scan_optio
 from roktracker.utils.exception_handling import ConsoleExceptionHander
 from roktracker.utils.file_manager import (
     load_config,
+    save_config,
     load_kingdom_presets,
     save_kingdom_presets,
 )
@@ -298,6 +299,11 @@ class API:
 
     def LoadScanPresets(self):
         return TypeAdapter(list[ScanPreset]).dump_json(load_kingdom_presets()).decode()
+
+    def SaveConfig(self, config_str: str):
+        config = FullConfig.model_validate_json(config_str)
+        save_config(config)
+        return ""
 
     def SaveScanPresets(self, presets: str):
         save_kingdom_presets(TypeAdapter(list[ScanPreset]).validate_json(presets))

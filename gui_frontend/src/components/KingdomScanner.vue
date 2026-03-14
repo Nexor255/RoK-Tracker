@@ -1,114 +1,115 @@
 <template>
-  <div class="flex gap-4">
-    <!-- Left panel: controls -->
-    <div class="flex w-2/3 gap-4">
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-12 min-h-0">
+    <!-- Left Column: Controls (Presets & Tree) -->
+    <div class="flex flex-col gap-3 lg:col-span-3 min-h-0 overflow-y-auto">
       <!-- Preset + tree + actions -->
-      <div class="flex w-1/3 flex-col gap-3">
-        <!-- Scan Preset Select -->
-        <div class="space-y-1">
-          <label class="text-sm font-medium">Scan Preset</label>
-          <div class="flex items-center gap-2">
-            <Select v-model="selectedPresetName" :disabled="scanRunning">
-              <SelectTrigger class="flex-1">
-                <SelectValue :placeholder="selectedPreset?.name ?? 'Select preset'" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem
-                  v-for="preset in configStore.availableScanPresets"
-                  :key="preset.name"
-                  :value="preset.name"
-                >
-                  {{ preset.name }}
-                </SelectItem>
-              </SelectContent>
-            </Select>
-            <Button
-              v-if="selectedPreset"
-              variant="destructive"
-              size="icon"
-              @click="handleDeletePreset"
-              :disabled="scanRunning"
-            >
-              <Trash2 class="h-4 w-4" />
-            </Button>
-          </div>
+      
+      <!-- Scan Preset Select -->
+      <div class="space-y-1">
+        <label class="text-sm font-medium">Scan Preset</label>
+        <div class="flex items-center gap-2">
+          <Select v-model="selectedPresetName" :disabled="scanRunning">
+            <SelectTrigger class="flex-1">
+              <SelectValue :placeholder="selectedPreset?.name ?? 'Select preset'" />
+            </SelectTrigger>
+            <SelectContent>
+              <SelectItem
+                v-for="preset in configStore.availableScanPresets"
+                :key="preset.name"
+                :value="preset.name"
+              >
+                {{ preset.name }}
+              </SelectItem>
+            </SelectContent>
+          </Select>
+          <Button
+            v-if="selectedPreset"
+            variant="destructive"
+            size="icon"
+            @click="handleDeletePreset"
+            :disabled="scanRunning"
+          >
+            <Trash2 class="h-4 w-4" />
+          </Button>
         </div>
+      </div>
 
-        <!-- Info Tree (checkboxes) -->
-        <div class="space-y-1 rounded-md border p-2">
-          <div v-for="group in infoToScan" :key="group.label" class="space-y-1">
-            <div class="flex items-center gap-2">
-              <Checkbox
-                :checked="isGroupChecked(group)"
-                @update:checked="toggleGroup(group, $event)"
-                :disabled="scanRunning"
-              />
-              <span class="text-sm font-medium">{{ group.label }}</span>
-            </div>
-            <div v-if="group.children" class="ml-4 space-y-1">
-              <div v-for="subGroup in group.children" :key="subGroup.label" class="space-y-0.5">
-                <div class="flex items-center gap-2">
+      <!-- Info Tree (checkboxes) -->
+      <div class="space-y-1 mb-2">
+        <div v-for="group in infoToScan" :key="group.label" class="space-y-1">
+          <div class="flex items-center gap-2">
+            <Checkbox
+              :checked="isGroupChecked(group)"
+              @update:checked="toggleGroup(group, $event)"
+              :disabled="scanRunning"
+            />
+            <span class="text-sm font-medium">{{ group.label }}</span>
+          </div>
+          <div v-if="group.children" class="ml-4 space-y-1">
+            <div v-for="subGroup in group.children" :key="subGroup.label" class="space-y-0.5">
+              <div class="flex items-center gap-2">
+                <Checkbox
+                  :checked="isGroupChecked(subGroup)"
+                  @update:checked="toggleGroup(subGroup, $event)"
+                  :disabled="scanRunning"
+                />
+                <span class="text-xs font-medium text-muted-foreground">{{ subGroup.label }}</span>
+              </div>
+              <div v-if="subGroup.children" class="ml-4 space-y-0.5">
+                <div v-for="leaf in subGroup.children" :key="leaf.label" class="flex items-center gap-2">
                   <Checkbox
-                    :checked="isGroupChecked(subGroup)"
-                    @update:checked="toggleGroup(subGroup, $event)"
+                    :checked="configStore.selectedKingdomOptions.selections.includes(leaf.label as SelectionValue)"
+                    @update:checked="toggleLeaf(leaf.label as SelectionValue, $event)"
                     :disabled="scanRunning"
                   />
-                  <span class="text-xs font-medium text-muted-foreground">{{ subGroup.label }}</span>
-                </div>
-                <div v-if="subGroup.children" class="ml-4 space-y-0.5">
-                  <div v-for="leaf in subGroup.children" :key="leaf.label" class="flex items-center gap-2">
-                    <Checkbox
-                      :checked="configStore.selectedKingdomOptions.selections.includes(leaf.label as SelectionValue)"
-                      @update:checked="toggleLeaf(leaf.label as SelectionValue, $event)"
-                      :disabled="scanRunning"
-                    />
-                    <span class="text-xs">{{ leaf.label }}</span>
-                  </div>
+                  <span class="text-xs">{{ leaf.label }}</span>
                 </div>
               </div>
             </div>
           </div>
         </div>
-
-        <Button variant="secondary" @click="handleSavePreset" :disabled="scanRunning">
-          Save as Preset
-        </Button>
-
-        <Button
-          :variant="scanRunning ? 'destructive' : 'default'"
-          @click="handleMainButtonClick"
-          :disabled="startButtonDisabled"
-        >
-          {{ startButtonDisabled ? 'Stopping...' : scanRunning ? 'Stop Scan' : 'Start Scan' }}
-        </Button>
       </div>
 
-      <!-- Form fields -->
-      <div class="flex flex-1 flex-col gap-3">
-        <div class="flex gap-3">
+      <Button variant="secondary" @click="handleSavePreset" :disabled="scanRunning">
+        Save as Preset
+      </Button>
+
+      <Button
+        :variant="startBtnVariant"
+        @click="handleMainButtonClick"
+        :disabled="startButtonDisabled"
+      >
+        {{ startButtonDisabled ? 'Stopping...' : scanRunning ? 'Stop Scan' : 'Start Scan' }}
+      </Button>
+    </div>
+
+    <!-- Middle Column: Form Settings -->
+    <div class="flex flex-col gap-4 lg:col-span-5 min-h-0 overflow-y-auto pr-1">
+      <div class="flex flex-col gap-4">
+        <!-- General -->
+        <div class="grid grid-cols-2 gap-4">
           <Input
-            class="flex-1"
             v-model="configStore.config.scan.kingdom_name"
             label="Scan name"
-            hint="This will get prepended to the file name"
+            hint="Prepended to file name"
             :disabled="scanRunning"
           />
-          <!-- Output formats multi-select using badges -->
-          <div class="flex-1 space-y-1">
-            <label class="text-sm font-medium">Output formats</label>
-            <div class="flex flex-wrap gap-1 rounded-md border p-2 min-h-[36px]">
+          
+          <div class="space-y-1.5 flex flex-col justify-end">
+            <label class="text-sm font-medium leading-none">Output formats</label>
+            <div class="flex flex-wrap gap-1 rounded-md border p-1.5 min-h-[38px] bg-background">
               <Badge
                 v-for="(fmt, idx) in selectedOutputs"
                 :key="fmt.value"
-                variant="outline"
-                class="flex items-center gap-1 cursor-pointer"
+                variant="secondary"
+                class="flex items-center gap-1 cursor-pointer hover:bg-destructive/10 hover:text-destructive transition-colors"
                 @click="removeOutput(idx)"
               >
                 {{ fmt.display }}
                 <X class="h-3 w-3" />
               </Badge>
             </div>
-            <div class="flex gap-1 mt-1">
+            <div class="flex flex-wrap gap-1 mt-1">
               <Button
                 v-for="fmt in availableOutputFormats"
                 :key="fmt.value"
@@ -116,121 +117,126 @@
                 size="sm"
                 @click="addOutput(fmt)"
                 :disabled="scanRunning"
-                class="text-xs h-6"
+                class="text-[10px] h-5 px-2"
               >
                 + {{ fmt.display }}
               </Button>
             </div>
-            <p class="text-xs text-muted-foreground">The format you want</p>
           </div>
         </div>
 
-        <div class="flex gap-3">
+        <div class="grid grid-cols-2 gap-4">
           <Input
-            class="flex-1"
             v-model="configStore.config.general.bluestacks.name"
             label="Emulator name"
-            hint="Works only for BlueStacks"
+            hint="BlueStacks instance name"
             :disabled="scanRunning"
           />
           <Input
-            class="flex-1"
             v-model="configStore.config.general.adb_port"
-            label="ADB Port of emulator"
-            hint="Should be autofilled if emulator is found"
+            label="ADB Port"
+            hint="Autofilled if found"
             :disabled="scanRunning"
           />
         </div>
 
+        <!-- Governors to scan full width -->
         <Input
+          type="number"
           v-model="configStore.config.scan.people_to_scan"
-          label="How many people to scan"
-          hint="The amount of people you want to scan"
+          label="Governors to scan"
+          hint="Amount of people to scan"
           :disabled="scanRunning"
         />
 
-        <Switch
-          :checked="configStore.config.scan.resume"
-          @update:checked="configStore.config.scan.resume = $event"
-          label="Start at 4th governor"
-          :disabled="scanRunning"
-        />
-        <Switch
-          :checked="configStore.config.scan.advanced_scroll"
-          @update:checked="configStore.config.scan.advanced_scroll = $event"
-          label="Better Scrolling"
-          :disabled="scanRunning"
-        />
-        <Switch
-          :checked="configStore.config.scan.track_inactives"
-          @update:checked="configStore.config.scan.track_inactives = $event"
-          label="Track inactives"
-          :disabled="scanRunning"
-        />
-        <Switch
-          :checked="configStore.config.scan.validate_kills"
-          @update:checked="configStore.config.scan.validate_kills = $event"
-          label="Validate kills"
-          :disabled="scanRunning"
-        />
-        <Switch
-          :checked="configStore.config.scan.reconstruct_kills"
-          @update:checked="configStore.config.scan.reconstruct_kills = $event"
-          label="Reconstruct kills"
-          :disabled="scanRunning || !configStore.config.scan.validate_kills"
-        />
-
-        <div class="flex items-center gap-3">
+        <!-- Toggles grid -->
+        <div class="grid grid-cols-2 gap-x-4 gap-y-3 rounded-md bg-muted/10 p-3 border">
           <Switch
-            :checked="configStore.config.scan.validate_power"
-            @update:checked="configStore.config.scan.validate_power = $event"
-            label="Validate Power"
+            :checked="configStore.config.scan.resume"
+            @update:checked="configStore.config.scan.resume = $event"
+            label="Start at 4th governor"
             :disabled="scanRunning"
           />
-          <Input
-            class="flex-1"
-            v-model="configStore.config.scan.power_threshold"
-            label="Power tolerance"
-            hint="Acceptable power in wrong direction"
-            :disabled="scanRunning || !configStore.config.scan.validate_power"
+          <Switch
+            :checked="configStore.config.scan.advanced_scroll"
+            @update:checked="configStore.config.scan.advanced_scroll = $event"
+            label="Better Scrolling"
+            :disabled="scanRunning"
+          />
+          <Switch
+            :checked="configStore.config.scan.track_inactives"
+            @update:checked="configStore.config.scan.track_inactives = $event"
+            label="Track inactives"
+            :disabled="scanRunning"
+          />
+          <Switch
+            :checked="configStore.config.scan.validate_kills"
+            @update:checked="configStore.config.scan.validate_kills = $event"
+            label="Validate kills"
+            :disabled="scanRunning"
+          />
+          <Switch
+            :checked="configStore.config.scan.reconstruct_kills"
+            @update:checked="configStore.config.scan.reconstruct_kills = $event"
+            label="Reconstruct kills"
+            :disabled="scanRunning || !configStore.config.scan.validate_kills"
           />
         </div>
 
-        <div class="flex gap-3">
+        <!-- Power Validation Row -->
+        <div class="flex items-center gap-4 mt-1">
+          <div class="w-1/3">
+            <Switch
+              :checked="configStore.config.scan.validate_power"
+              @update:checked="configStore.config.scan.validate_power = $event"
+              label="Validate Power"
+              :disabled="scanRunning"
+            />
+          </div>
+          <div class="w-2/3">
+            <Input
+              v-model="configStore.config.scan.power_threshold"
+              label="Power tolerance"
+              hint="Tolerance threshold"
+              :disabled="scanRunning || !configStore.config.scan.validate_power"
+            />
+          </div>
+        </div>
+
+        <!-- Delays Row -->
+        <div class="grid grid-cols-3 gap-2 xl:gap-4">
           <Input
-            class="flex-1"
             v-model="configStore.config.scan.timings.info_close"
-            label="Wait after more close (in s)"
-            hint="Delay after exiting more info"
+            label="Info delay (s)"
+            hint="Wait after more info"
             :disabled="scanRunning"
           />
           <Input
-            class="flex-1"
             v-model="configStore.config.scan.timings.gov_close"
-            label="Wait after governor close (in s)"
-            hint="Delay after exiting governor"
+            label="Gov delay (s)"
+            hint="Wait after governor"
+            :disabled="scanRunning"
+          />
+          <Input
+            v-model="configStore.config.scan.timings.max_random"
+            label="Random delay (s)"
+            hint="Max added variance"
             :disabled="scanRunning"
           />
         </div>
-
-        <Input
-          v-model="configStore.config.scan.timings.max_random"
-          label="Maximum random delay (in s)"
-          hint="A random delay is added to the wait times, this is the maximum"
-          :disabled="scanRunning"
-        />
       </div>
     </div>
 
-    <!-- Right panel: governor data + status -->
-    <div class="flex flex-1 flex-col gap-3">
-      <div class="flex-1">
-        <LastGovernor />
+    <!-- Right Column: Results & Status -->
+    <div class="flex flex-col gap-4 lg:col-span-4 min-h-0">
+      <div class="flex-1 flex flex-col gap-4 min-h-0">
+        <!-- We use flex-1 on this div so the inner components can stretch or scroll if necessary. -->
+        <LastGovernor class="flex-1" />
+        <ScanStatus :scan-id="kingdomStore.scanID" :status-message="kingdomStore.statusMessage" />
       </div>
-      <ScanStatus :scan-id="kingdomStore.scanID" :status-message="kingdomStore.statusMessage" />
     </div>
 
-    <!-- Save Preset Dialog -->
+    <!-- Dialogs -->
     <AlertDialog :open="saveDialogOpen">
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -245,7 +251,6 @@
       </AlertDialogContent>
     </AlertDialog>
 
-    <!-- Delete Preset Dialog -->
     <AlertDialog :open="deleteDialogOpen">
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -256,12 +261,11 @@
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel @click="deleteDialogOpen = false">No</AlertDialogCancel>
-          <AlertDialogAction @click="confirmDeletePreset">Yes</AlertDialogAction>
+          <AlertDialogAction @click="confirmDeletePreset" class="bg-destructive text-destructive-foreground hover:bg-destructive/90">Yes, delete</AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
 
-    <!-- Confirm scan dialog -->
     <AlertDialog :open="confirmDialogOpen">
       <AlertDialogContent>
         <AlertDialogHeader>
@@ -306,6 +310,12 @@ const configStore = useConfigStore()
 
 const scanRunning = ref(false)
 const startButtonDisabled = ref(false)
+
+const startBtnVariant = computed(() => {
+  if (startButtonDisabled.value) return 'secondary'
+  if (scanRunning.value) return 'destructive'
+  return 'default'
+})
 
 // ---- Preset management ----
 const selectedPresetName = ref(configStore.availableScanPresets[0]?.name ?? '')
@@ -507,3 +517,13 @@ window.kingdom = {
   scanFinished: scanFinished,
 }
 </script>
+
+<style scoped>
+.overflow-y-auto::-webkit-scrollbar {
+  display: none;
+}
+.overflow-y-auto {
+  -ms-overflow-style: none;  /* IE and Edge */
+  scrollbar-width: none;  /* Firefox */
+}
+</style>

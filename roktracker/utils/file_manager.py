@@ -49,3 +49,8 @@ def load_kingdom_presets() -> List[ScanPreset]:
 def save_kingdom_presets(presets: List[ScanPreset]):
     with open(get_app_root() / "presets.json", "wt") as preset_file:
         preset_file.write(TypeAdapter(list[ScanPreset]).dump_json(presets).decode())
+
+
+def save_config(config: FullConfig):
+    with open(get_app_root() / "config.json", "wt") as config_file:
+        config_file.write(config.model_dump_json(indent=4))

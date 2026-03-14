@@ -13,6 +13,7 @@ interface PywebviewApi {
   //--------------------------------
   LoadFullConfig(): Promise<string>
   LoadScanPresets(): Promise<string>
+  SaveConfig(config_str: string): void
   SaveScanPresets(presets: string): void
 }
 
