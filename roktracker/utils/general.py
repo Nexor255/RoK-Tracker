@@ -7,14 +7,31 @@ import time
 import cv2
 import numpy as np
 
-from typing import Any, List
+from typing import Any
 from cv2.typing import MatLike
-from pydantic import TypeAdapter
 
 from dummy_root import get_app_root
 from roktracker.utils.exceptions import ConfigError
-from roktracker.utils.types.full_config import FullConfig
-from roktracker.utils.types.scan_preset import ScanPreset
+
+
+def load_config():
+    try:
+        with open(get_app_root() / "config.json", "rt") as config_file:
+            return json.load(config_file)
+    except json.JSONDecodeError as e:
+        if e.msg == "Invalid \\escape":
+            raise ConfigError(
+                f"Config is invalid. Make sure you use \\\\ instead of \\. The error happened in line {e.lineno}."
+            )
+        if e.msg == "Invalid control character at":
+            raise ConfigError(
+                f"Config is invalid. {e.msg} char {e.colno} in line {e.lineno}."
+            )
+        raise ConfigError(f"Config is invalid. {e.msg} in line {e.lineno}.")
+    except FileNotFoundError:
+        raise ConfigError(
+            "Config file is missing: make sure config.json is in the same folder as your scanner."
+        )
 
 
 def to_int_check(element) -> int:
@@ -54,6 +71,8 @@ def is_string_float(element: str, allow_empty=False) -> bool:
     except ValueError:
         return False
 
+def more_info_present(ocr_text: str) -> bool:
+    return "MoreInfo" in ocr_text or "Morenfor" in ocr_text
 
 def generate_random_id(length: int) -> str:
     alphabet = string.ascii_lowercase + string.digits

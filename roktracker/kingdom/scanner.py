@@ -13,8 +13,8 @@ from pathlib import Path
 from roktracker.utils.adb import *
 from roktracker.utils.general import *
 from roktracker.utils.ocr import *
-from roktracker.kingdom.types.additional_data import AdditionalData
-from roktracker.kingdom.types.governor_data import GovernorData
+from roktracker.kingdom.additional_data import AdditionalData
+from roktracker.kingdom.governor_data import GovernorData
 from tesserocr import PyTessBaseAPI, PSM, OEM  # type: ignore (tesserocr has no type defs)
 from typing import Callable
 from PIL import Image
@@ -63,18 +63,17 @@ def scan_preset_to_scan_options(preset: ScanPreset) -> ScanOptions:
 
 
 class KingdomScanner:
-
-    def __init__(self, config: FullConfig, scan_options: ScanOptions, port):
+    def __init__(self, config, scan_options, port):
         self.run_id = generate_random_id(8)
         self.scan_times = []
         self.start_date = datetime.date.today()
         self.stop_scan = False
 
         self.config = config
-        self.timings = config.scan.timings
-        self.max_random_delay = config.scan.timings.max_random
+        self.timings = config["scan"]["timings"]
+        self.max_random_delay = config["scan"]["timings"]["max_random"]
 
-        self.advanced_scroll = config.scan.advanced_scroll
+        self.advanced_scroll = config["scan"]["advanced_scroll"]
         self.scan_options = scan_options
         self.abort = False
         self.inactive_players = 0
@@ -102,7 +101,7 @@ class KingdomScanner:
         self.adb_client = AdvancedAdbClient(
             str(self.root_dir / "deps" / "platform-tools" / "adb.exe"),
             port,
-            config.general.emulator,
+            config["general"]["emulator"],
             self.root_dir / "deps" / "inputs",
         )
 
@@ -186,27 +185,27 @@ class KingdomScanner:
         match page:
             case 1:
                 return (
-                    self.scan_options.id
-                    or self.scan_options.name
-                    or self.scan_options.power
-                    or self.scan_options.killpoints
-                    or self.scan_options.alliance
+                    self.scan_options["ID"]
+                    or self.scan_options["Name"]
+                    or self.scan_options["Power"]
+                    or self.scan_options["Killpoints"]
+                    or self.scan_options["Alliance"]
                 )
             case 2:
                 return (
-                    self.scan_options.t1_kills
-                    or self.scan_options.t2_kills
-                    or self.scan_options.t3_kills
-                    or self.scan_options.t4_kills
-                    or self.scan_options.t5_kills
-                    or self.scan_options.ranged
+                    self.scan_options["T1 Kills"]
+                    or self.scan_options["T2 Kills"]
+                    or self.scan_options["T3 Kills"]
+                    or self.scan_options["T4 Kills"]
+                    or self.scan_options["T5 Kills"]
+                    or self.scan_options["Ranged"]
                 )
             case 3:
                 return (
-                    self.scan_options.deaths
-                    or self.scan_options.assistance
-                    or self.scan_options.gathered
-                    or self.scan_options.helps
+                    self.scan_options["Deads"]
+                    or self.scan_options["Rss Assistance"]
+                    or self.scan_options["Rss Gathered"]
+                    or self.scan_options["Helps"]
                 )
             case _:
                 return False
@@ -226,10 +225,12 @@ class KingdomScanner:
             + str(self.get_gov_position(current_player, self.inactive_players))
         )
 
-        wait_random_range(self.timings.gov_open, self.max_random_delay)
+        wait_random_range(self.timings["gov_open"], self.max_random_delay)
 
         gov_info = False
         count = 0
+        ui_positions = {}
+        tap_positions = {}
 
         while not (gov_info):
             self.adb_client.secure_adb_screencap().save(
@@ -252,7 +253,7 @@ class KingdomScanner:
                 check_more_info = api.GetUTF8Text()
 
             # Probably tapped governor is inactive and needs to be skipped
-            if "MoreInfo" not in check_more_info:
+            if not more_info_present(check_more_info):
                 self.inactive_players += 1
                 if track_inactives:
                     image_check_inactive = load_cv2_img(
@@ -285,7 +286,7 @@ class KingdomScanner:
                     + str(self.get_gov_position(current_player, self.inactive_players)),
                 )
                 count += 1
-                wait_random_range(self.timings.gov_open, self.max_random_delay)
+                wait_random_range(self.timings["gov_open"], self.max_random_delay)
                 if count == 10:
                     cont = self.ask_continue("Could not find user, retry?")
                     if cont:
@@ -294,6 +295,28 @@ class KingdomScanner:
                         break
             else:
                 gov_info = True
+                image_check = load_cv2_img(
+                    self.img_path / "check_more_info.png", cv2.IMREAD_GRAYSCALE
+                )
+
+                # Checking for more info
+                im_check_more_info = cropToRegion(
+                    image_check, rok_ui.ocr_check_profile_version
+                )
+                check_profile_version = ""
+
+                with PyTessBaseAPI(path=str(self.tesseract_path)) as api:
+                    api.SetVariable("tessedit_char_whitelist", "Aclaim")
+                    api.SetImage(Image.fromarray(im_check_more_info))  # type: ignore (pylance is messed up)
+                    check_profile_version = api.GetUTF8Text()
+
+                if "Acclaim" in check_profile_version:
+                    ui_positions = rok_ui.ocr_regions
+                    tap_positions = rok_ui.tap_positions
+                else:
+                    ui_positions = rok_ui.ocr_regions_old
+                    tap_positions = rok_ui.tap_positions_old
+
                 break
 
         if self.is_page_needed(1):
@@ -303,15 +326,17 @@ class KingdomScanner:
             self.adb_client.secure_adb_screencap().save(self.img_path / "gov_info.png")
             image = load_cv2_img(self.img_path / "gov_info.png", cv2.IMREAD_UNCHANGED)
 
-            if self.scan_options.name:
+            if self.scan_options["Name"]:
                 # nickname copy
                 copy_try = 0
                 while copy_try < 3:
                     try:
                         self.adb_client.secure_adb_tap(
-                            rok_ui.tap_positions["name_copy"]
+                            tap_positions["name_copy"]
                         )
-                        wait_random_range(self.timings.copy_wait, self.max_random_delay)
+                        wait_random_range(
+                            self.timings["copy_wait"], self.max_random_delay
+                        )
                         tk_clipboard = tkinter.Tk()
                         governor_data.name = tk_clipboard.clipboard_get()
                         tk_clipboard.destroy()
@@ -325,15 +350,15 @@ class KingdomScanner:
             with PyTessBaseAPI(
                 path=str(self.tesseract_path), psm=PSM.SINGLE_WORD, oem=OEM.LSTM_ONLY
             ) as api:
-                if self.scan_options.power:
-                    im_gov_power = cropToRegion(image, rok_ui.ocr_regions["power"])
+                if self.scan_options["Power"]:
+                    im_gov_power = cropToRegion(image, ui_positions["power"])
                     im_gov_power_bw = preprocessImage(im_gov_power, 3, 100, 12, True)
 
                     governor_data.power = ocr_number(api, im_gov_power_bw)
 
-                if self.scan_options.killpoints:
+                if self.scan_options["Killpoints"]:
                     im_gov_killpoints = cropToRegion(
-                        image, rok_ui.ocr_regions["killpoints"]
+                        image, ui_positions["killpoints"]
                     )
                     im_gov_killpoints_bw = preprocessImage(
                         im_gov_killpoints, 3, 100, 12, True
@@ -342,8 +367,8 @@ class KingdomScanner:
                     governor_data.killpoints = ocr_number(api, im_gov_killpoints_bw)
 
                 api.SetPageSegMode(PSM.SINGLE_LINE)
-                if self.scan_options.id:
-                    im_gov_id = cropToRegion(image, rok_ui.ocr_regions["gov_id"])
+                if self.scan_options["ID"]:
+                    im_gov_id = cropToRegion(image, ui_positions["gov_id"])
                     im_gov_id_gray = cv2.cvtColor(im_gov_id, cv2.COLOR_BGR2GRAY)
                     im_gov_id_gray = cv2.bitwise_not(im_gov_id_gray)
                     (thresh, im_gov_id_bw) = cv2.threshold(
@@ -352,9 +377,9 @@ class KingdomScanner:
 
                     governor_data.id = ocr_number(api, im_gov_id_bw)
 
-                if self.scan_options.alliance:
+                if self.scan_options["Alliance"]:
                     im_alliance_tag = cropToRegion(
-                        image, rok_ui.ocr_regions["alliance_name"]
+                        image, ui_positions["alliance_name"]
                     )
                     im_alliance_bw = preprocessImage(im_alliance_tag, 3, 50, 12, True)
 
@@ -362,9 +387,9 @@ class KingdomScanner:
 
         if self.is_page_needed(2):
             # kills tier
-            self.adb_client.secure_adb_tap(rok_ui.tap_positions["open_kills"])
+            self.adb_client.secure_adb_tap(tap_positions["open_kills"])
             self.state_callback("Scanning kills page")
-            wait_random_range(self.timings.kills_open, self.max_random_delay)
+            wait_random_range(self.timings["kills_open"], self.max_random_delay)
 
             self.adb_client.secure_adb_screencap().save(
                 self.img_path / "kills_tier.png"
@@ -377,96 +402,96 @@ class KingdomScanner:
             with PyTessBaseAPI(
                 path=str(self.tesseract_path), psm=PSM.SINGLE_WORD, oem=OEM.LSTM_ONLY
             ) as api:
-                if self.scan_options.t1_kills:
+                if self.scan_options["T1 Kills"]:
                     # tier 1 Kills
                     governor_data.t1_kills = preprocess_and_ocr_number(
-                        api, image2, rok_ui.ocr_regions["t1_kills"]
+                        api, image2, ui_positions["t1_kills"]
                     )
 
                     # tier 1 KP
                     governor_data.t1_kp = preprocess_and_ocr_number(
-                        api, image2, rok_ui.ocr_regions["t1_killpoints"]
+                        api, image2, ui_positions["t1_killpoints"]
                     )
 
-                if self.scan_options.t2_kills:
+                if self.scan_options["T2 Kills"]:
                     # tier 2 Kills
                     governor_data.t2_kills = preprocess_and_ocr_number(
-                        api, image2, rok_ui.ocr_regions["t2_kills"]
+                        api, image2, ui_positions["t2_kills"]
                     )
 
                     # tier 2 KP
                     governor_data.t2_kp = preprocess_and_ocr_number(
-                        api, image2, rok_ui.ocr_regions["t2_killpoints"]
+                        api, image2, ui_positions["t2_killpoints"]
                     )
 
-                if self.scan_options.t3_kills:
+                if self.scan_options["T3 Kills"]:
                     # tier 3 Kills
                     governor_data.t3_kills = preprocess_and_ocr_number(
-                        api, image2, rok_ui.ocr_regions["t3_kills"]
+                        api, image2, ui_positions["t3_kills"]
                     )
 
                     # tier 3 KP
                     governor_data.t3_kp = preprocess_and_ocr_number(
-                        api, image2, rok_ui.ocr_regions["t3_killpoints"]
+                        api, image2, ui_positions["t3_killpoints"]
                     )
 
-                if self.scan_options.t4_kills:
+                if self.scan_options["T4 Kills"]:
                     # tier 4 Kills
                     governor_data.t4_kills = preprocess_and_ocr_number(
-                        api, image2, rok_ui.ocr_regions["t4_kills"]
+                        api, image2, ui_positions["t4_kills"]
                     )
 
                     # tier 4 KP
                     governor_data.t4_kp = preprocess_and_ocr_number(
-                        api, image2, rok_ui.ocr_regions["t4_killpoints"]
+                        api, image2, ui_positions["t4_killpoints"]
                     )
 
-                if self.scan_options.t5_kills:
+                if self.scan_options["T5 Kills"]:
                     # tier 5 Kills
                     governor_data.t5_kills = preprocess_and_ocr_number(
-                        api, image2, rok_ui.ocr_regions["t5_kills"]
+                        api, image2, ui_positions["t5_kills"]
                     )
 
                     # tier 5 KP
                     governor_data.t5_kp = preprocess_and_ocr_number(
-                        api, image2, rok_ui.ocr_regions["t5_killpoints"]
+                        api, image2, ui_positions["t5_killpoints"]
                     )
 
-                if self.scan_options.ranged:
+                if self.scan_options["Ranged"]:
                     # ranged points
                     governor_data.ranged_points = preprocess_and_ocr_number(
-                        api, image2, rok_ui.ocr_regions["ranged_points"]
+                        api, image2, ui_positions["ranged_points"]
                     )
 
         if self.is_page_needed(3):
             # More info tab
-            self.adb_client.secure_adb_tap(rok_ui.tap_positions["more_info"])
+            self.adb_client.secure_adb_tap(tap_positions["more_info"])
             self.state_callback("Scanning more info page")
-            wait_random_range(self.timings.info_open, self.max_random_delay)
+            wait_random_range(self.timings["info_open"], self.max_random_delay)
             self.adb_client.secure_adb_screencap().save(self.img_path / "more_info.png")
             image3 = load_cv2_img(self.img_path / "more_info.png", cv2.IMREAD_UNCHANGED)
 
             with PyTessBaseAPI(
                 path=str(self.tesseract_path), psm=PSM.SINGLE_WORD, oem=OEM.LSTM_ONLY
             ) as api:
-                if self.scan_options.deaths:
+                if self.scan_options["Deads"]:
                     governor_data.dead = preprocess_and_ocr_number(
-                        api, image3, rok_ui.ocr_regions["deads"], True
+                        api, image3, ui_positions["deads"], True
                     )
 
-                if self.scan_options.assistance:
+                if self.scan_options["Rss Assistance"]:
                     governor_data.rss_assistance = preprocess_and_ocr_number(
-                        api, image3, rok_ui.ocr_regions["rss_assisted"], True
+                        api, image3, ui_positions["rss_assisted"], True
                     )
 
-                if self.scan_options.gathered:
+                if self.scan_options["Rss Gathered"]:
                     governor_data.rss_gathered = preprocess_and_ocr_number(
-                        api, image3, rok_ui.ocr_regions["rss_gathered"], True
+                        api, image3, ui_positions["rss_gathered"], True
                     )
 
-                if self.scan_options.helps:
+                if self.scan_options["Helps"]:
                     governor_data.helps = preprocess_and_ocr_number(
-                        api, image3, rok_ui.ocr_regions["alliance_helps"], True
+                        api, image3, ui_positions["alliance_helps"], True
                     )
 
         # Just to check the progress, printing in cmd the result for each governor
@@ -475,13 +500,13 @@ class KingdomScanner:
         self.state_callback("Closing governor")
         if self.is_page_needed(3):
             self.adb_client.secure_adb_tap(
-                rok_ui.tap_positions["close_info"]
+                tap_positions["close_info"]
             )  # close more info
-            wait_random_range(self.timings.info_close, self.max_random_delay)
+            wait_random_range(self.timings["info_close"], self.max_random_delay)
         self.adb_client.secure_adb_tap(
-            rok_ui.tap_positions["close_gov"]
+            tap_positions["close_gov"]
         )  # close governor info
-        wait_random_range(self.timings.gov_close, self.max_random_delay)
+        wait_random_range(self.timings["gov_close"], self.max_random_delay)
 
         end_time = time.time()
 
@@ -500,7 +525,7 @@ class KingdomScanner:
         reconstruct_fails: bool,
         validate_power: bool,
         power_threshold: int,
-        formats: FormatsConfig,
+        formats: OutputFormats,
     ):
         self.state_callback("Initializing")
         self.adb_client.start_adb()
@@ -636,17 +661,14 @@ class KingdomScanner:
             data_handler.write_governor(gov_data)
             data_handler.save()
 
-            additional_info = AdditionalData.model_validate(
-                {
-                    "current_governor": i + 1,
-                    "target_governor": amount,
-                    "skipped_governors": self.inactive_players,
-                    "power_ok": power_ok,
-                    "kills_ok": kills_ok,
-                    "reconstruction_success": reconstruction_success,
-                    "remaining_sec": self.get_remaining_time(amount - i),
-                    "current_time": datetime.datetime.now().astimezone(),
-                }
+            additional_info = AdditionalData(
+                i + 1,
+                amount,
+                self.inactive_players,
+                str(power_ok),
+                str(kills_ok),
+                str(reconstruction_success),
+                self.get_remaining_time(amount - i),
             )
 
             self.gov_callback(gov_data, additional_info)

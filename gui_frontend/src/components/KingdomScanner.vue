@@ -1,7 +1,7 @@
 <template>
   <div class="grid grid-cols-1 gap-4 lg:grid-cols-12 min-h-0">
     <!-- Left Column: Controls (Presets & Tree) -->
-    <div class="flex flex-col gap-3 lg:col-span-3 min-h-0 overflow-y-auto">
+    <div class="flex flex-col gap-3 lg:col-span-2 min-h-0 overflow-y-auto">
       <!-- Preset + tree + actions -->
       
       <!-- Scan Preset Select -->
@@ -84,7 +84,7 @@
     </div>
 
     <!-- Middle Column: Form Settings -->
-    <div class="flex flex-col gap-4 lg:col-span-5 min-h-0 overflow-y-auto pr-1">
+    <div class="flex flex-col gap-4 lg:col-span-6 min-h-0 overflow-y-auto pr-1">
       <div class="flex flex-col gap-4">
         <!-- General -->
         <div class="grid grid-cols-2 gap-4">
