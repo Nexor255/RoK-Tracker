@@ -517,13 +517,3 @@ window.kingdom = {
   scanFinished: scanFinished,
 }
 </script>
-
-<style scoped>
-.overflow-y-auto::-webkit-scrollbar {
-  display: none;
-}
-.overflow-y-auto {
-  -ms-overflow-style: none;  /* IE and Edge */
-  scrollbar-width: none;  /* Firefox */
-}
-</style>

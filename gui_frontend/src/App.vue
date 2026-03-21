@@ -45,7 +45,7 @@
     <!-- Main content with sidebar -->
     <div class="flex flex-1 overflow-hidden">
       <!-- Sidebar Navigation -->
-      <nav class="flex w-[120px] flex-col items-center gap-1 border-r bg-muted/40 p-2">
+      <nav class="flex w-[120px] flex-col items-center gap-1 border-r bg-muted/40 p-2 overflow-y-auto scrollbar-hidden">
         <router-link
           v-for="item in navItems"
           :key="item.to"
@@ -59,7 +59,7 @@
       </nav>
 
       <!-- Content area -->
-      <main class="flex-1 overflow-auto p-4">
+      <main class="flex-1 overflow-auto scrollbar-hidden p-4">
         <router-view v-slot="{ Component, route }">
           <transition
             :enter-active-class="`${(route.meta.transitionIn as string) ?? 'slide-up'}-enter-active`"
