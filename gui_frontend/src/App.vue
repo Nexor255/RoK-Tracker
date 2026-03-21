@@ -3,7 +3,7 @@
     <!-- Header -->
     <header class="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-primary px-6 text-primary-foreground">
       <div class="flex items-center gap-2">
-        <img src="https://cdn.quasar.dev/logo-v2/svg/logo-mono-white.svg" class="h-8 w-8" alt="Logo" />
+        <Radar class="h-6 w-6" />
         <span class="text-lg font-semibold">RoK Tracker Suite</span>
       </div>
       <div class="flex-1" />
@@ -50,9 +50,10 @@
           v-for="item in navItems"
           :key="item.to"
           :to="item.to"
-          class="flex w-full items-center justify-center rounded-md px-3 py-2 text-sm font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
+          class="flex w-full flex-col items-center justify-center gap-1 rounded-md px-3 py-2.5 text-xs font-medium transition-colors hover:bg-accent hover:text-accent-foreground"
           active-class="bg-accent text-accent-foreground"
         >
+          <component :is="item.icon" class="h-5 w-5" />
           {{ item.label }}
         </router-link>
       </nav>
@@ -92,7 +93,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, markRaw } from 'vue'
 import { useDark, useToggle } from '@vueuse/core'
 import { useConfigStore } from './stores/config-store'
 import { FullConfigSchema } from './schema/FullConfig'
@@ -112,6 +113,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Radar, ScanLine, Calculator, Settings } from 'lucide-vue-next'
 
 const configStore = useConfigStore()
 const allianceStore = useAllianceStore()
@@ -122,9 +124,9 @@ const darkMode = useDark()
 const toggleDarkMode = useToggle(darkMode)
 
 const navItems = [
-  { to: '/scanner', label: 'Scanners' },
-  { to: '/calculator', label: 'Calculators' },
-  { to: '/settings', label: 'Settings' },
+  { to: '/scanner', label: 'Scanners', icon: markRaw(ScanLine) },
+  { to: '/calculator', label: 'Calculators', icon: markRaw(Calculator) },
+  { to: '/settings', label: 'Settings', icon: markRaw(Settings) },
 ]
 
 // Confirm dialog state (replaces $q.dialog)
