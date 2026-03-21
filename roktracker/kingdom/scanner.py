@@ -13,8 +13,8 @@ from pathlib import Path
 from roktracker.utils.adb import *
 from roktracker.utils.general import *
 from roktracker.utils.ocr import *
-from roktracker.kingdom.additional_data import AdditionalData
-from roktracker.kingdom.governor_data import GovernorData
+from roktracker.kingdom.types.additional_data import AdditionalData
+from roktracker.kingdom.types.governor_data import GovernorData
 from tesserocr import PyTessBaseAPI, PSM, OEM  # type: ignore (tesserocr has no type defs)
 from typing import Callable
 from PIL import Image
@@ -70,10 +70,10 @@ class KingdomScanner:
         self.stop_scan = False
 
         self.config = config
-        self.timings = config["scan"]["timings"]
-        self.max_random_delay = config["scan"]["timings"]["max_random"]
+        self.timings = config.scan.timings.model_dump()
+        self.max_random_delay = config.scan.timings.max_random
 
-        self.advanced_scroll = config["scan"]["advanced_scroll"]
+        self.advanced_scroll = config.scan.advanced_scroll
         self.scan_options = scan_options
         self.abort = False
         self.inactive_players = 0
@@ -101,7 +101,7 @@ class KingdomScanner:
         self.adb_client = AdvancedAdbClient(
             str(self.root_dir / "deps" / "platform-tools" / "adb.exe"),
             port,
-            config["general"]["emulator"],
+            config.general.emulator,
             self.root_dir / "deps" / "inputs",
         )
 
@@ -185,27 +185,27 @@ class KingdomScanner:
         match page:
             case 1:
                 return (
-                    self.scan_options["ID"]
-                    or self.scan_options["Name"]
-                    or self.scan_options["Power"]
-                    or self.scan_options["Killpoints"]
-                    or self.scan_options["Alliance"]
+                    self.scan_options.id
+                    or self.scan_options.name
+                    or self.scan_options.power
+                    or self.scan_options.killpoints
+                    or self.scan_options.alliance
                 )
             case 2:
                 return (
-                    self.scan_options["T1 Kills"]
-                    or self.scan_options["T2 Kills"]
-                    or self.scan_options["T3 Kills"]
-                    or self.scan_options["T4 Kills"]
-                    or self.scan_options["T5 Kills"]
-                    or self.scan_options["Ranged"]
+                    self.scan_options.t1_kills
+                    or self.scan_options.t2_kills
+                    or self.scan_options.t3_kills
+                    or self.scan_options.t4_kills
+                    or self.scan_options.t5_kills
+                    or self.scan_options.ranged
                 )
             case 3:
                 return (
-                    self.scan_options["Deads"]
-                    or self.scan_options["Rss Assistance"]
-                    or self.scan_options["Rss Gathered"]
-                    or self.scan_options["Helps"]
+                    self.scan_options.deaths
+                    or self.scan_options.assistance
+                    or self.scan_options.gathered
+                    or self.scan_options.helps
                 )
             case _:
                 return False
@@ -326,7 +326,7 @@ class KingdomScanner:
             self.adb_client.secure_adb_screencap().save(self.img_path / "gov_info.png")
             image = load_cv2_img(self.img_path / "gov_info.png", cv2.IMREAD_UNCHANGED)
 
-            if self.scan_options["Name"]:
+            if self.scan_options.name:
                 # nickname copy
                 copy_try = 0
                 while copy_try < 3:
@@ -350,13 +350,13 @@ class KingdomScanner:
             with PyTessBaseAPI(
                 path=str(self.tesseract_path), psm=PSM.SINGLE_WORD, oem=OEM.LSTM_ONLY
             ) as api:
-                if self.scan_options["Power"]:
+                if self.scan_options.power:
                     im_gov_power = cropToRegion(image, ui_positions["power"])
                     im_gov_power_bw = preprocessImage(im_gov_power, 3, 100, 12, True)
 
                     governor_data.power = ocr_number(api, im_gov_power_bw)
 
-                if self.scan_options["Killpoints"]:
+                if self.scan_options.killpoints:
                     im_gov_killpoints = cropToRegion(
                         image, ui_positions["killpoints"]
                     )
@@ -367,7 +367,7 @@ class KingdomScanner:
                     governor_data.killpoints = ocr_number(api, im_gov_killpoints_bw)
 
                 api.SetPageSegMode(PSM.SINGLE_LINE)
-                if self.scan_options["ID"]:
+                if self.scan_options.id:
                     im_gov_id = cropToRegion(image, ui_positions["gov_id"])
                     im_gov_id_gray = cv2.cvtColor(im_gov_id, cv2.COLOR_BGR2GRAY)
                     im_gov_id_gray = cv2.bitwise_not(im_gov_id_gray)
@@ -377,7 +377,7 @@ class KingdomScanner:
 
                     governor_data.id = ocr_number(api, im_gov_id_bw)
 
-                if self.scan_options["Alliance"]:
+                if self.scan_options.alliance:
                     im_alliance_tag = cropToRegion(
                         image, ui_positions["alliance_name"]
                     )
@@ -402,7 +402,7 @@ class KingdomScanner:
             with PyTessBaseAPI(
                 path=str(self.tesseract_path), psm=PSM.SINGLE_WORD, oem=OEM.LSTM_ONLY
             ) as api:
-                if self.scan_options["T1 Kills"]:
+                if self.scan_options.t1_kills:
                     # tier 1 Kills
                     governor_data.t1_kills = preprocess_and_ocr_number(
                         api, image2, ui_positions["t1_kills"]
@@ -413,7 +413,7 @@ class KingdomScanner:
                         api, image2, ui_positions["t1_killpoints"]
                     )
 
-                if self.scan_options["T2 Kills"]:
+                if self.scan_options.t2_kills:
                     # tier 2 Kills
                     governor_data.t2_kills = preprocess_and_ocr_number(
                         api, image2, ui_positions["t2_kills"]
@@ -424,7 +424,7 @@ class KingdomScanner:
                         api, image2, ui_positions["t2_killpoints"]
                     )
 
-                if self.scan_options["T3 Kills"]:
+                if self.scan_options.t3_kills:
                     # tier 3 Kills
                     governor_data.t3_kills = preprocess_and_ocr_number(
                         api, image2, ui_positions["t3_kills"]
@@ -435,7 +435,7 @@ class KingdomScanner:
                         api, image2, ui_positions["t3_killpoints"]
                     )
 
-                if self.scan_options["T4 Kills"]:
+                if self.scan_options.t4_kills:
                     # tier 4 Kills
                     governor_data.t4_kills = preprocess_and_ocr_number(
                         api, image2, ui_positions["t4_kills"]
@@ -446,7 +446,7 @@ class KingdomScanner:
                         api, image2, ui_positions["t4_killpoints"]
                     )
 
-                if self.scan_options["T5 Kills"]:
+                if self.scan_options.t5_kills:
                     # tier 5 Kills
                     governor_data.t5_kills = preprocess_and_ocr_number(
                         api, image2, ui_positions["t5_kills"]
@@ -457,7 +457,7 @@ class KingdomScanner:
                         api, image2, ui_positions["t5_killpoints"]
                     )
 
-                if self.scan_options["Ranged"]:
+                if self.scan_options.ranged:
                     # ranged points
                     governor_data.ranged_points = preprocess_and_ocr_number(
                         api, image2, ui_positions["ranged_points"]
@@ -474,22 +474,22 @@ class KingdomScanner:
             with PyTessBaseAPI(
                 path=str(self.tesseract_path), psm=PSM.SINGLE_WORD, oem=OEM.LSTM_ONLY
             ) as api:
-                if self.scan_options["Deads"]:
+                if self.scan_options.deaths:
                     governor_data.dead = preprocess_and_ocr_number(
                         api, image3, ui_positions["deads"], True
                     )
 
-                if self.scan_options["Rss Assistance"]:
+                if self.scan_options.assistance:
                     governor_data.rss_assistance = preprocess_and_ocr_number(
                         api, image3, ui_positions["rss_assisted"], True
                     )
 
-                if self.scan_options["Rss Gathered"]:
+                if self.scan_options.gathered:
                     governor_data.rss_gathered = preprocess_and_ocr_number(
                         api, image3, ui_positions["rss_gathered"], True
                     )
 
-                if self.scan_options["Helps"]:
+                if self.scan_options.helps:
                     governor_data.helps = preprocess_and_ocr_number(
                         api, image3, ui_positions["alliance_helps"], True
                     )
@@ -662,13 +662,13 @@ class KingdomScanner:
             data_handler.save()
 
             additional_info = AdditionalData(
-                i + 1,
-                amount,
-                self.inactive_players,
-                str(power_ok),
-                str(kills_ok),
-                str(reconstruction_success),
-                self.get_remaining_time(amount - i),
+                current_governor=i + 1,
+                target_governor=amount,
+                skipped_governors=self.inactive_players,
+                power_ok=str(power_ok),
+                kills_ok=str(kills_ok),
+                reconstruction_success=str(reconstruction_success),
+                remaining_sec=self.get_remaining_time(amount - i),
             )
 
             self.gov_callback(gov_data, additional_info)
