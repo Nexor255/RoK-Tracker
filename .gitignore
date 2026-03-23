@@ -600,20 +600,21 @@ FodyWeavers.xsd
 .thumbs.db
 node_modules
 
-# Quasar core related directories
-.quasar
-/dist
-/quasar.config.*.temporary.compiled*
+# Tauri
+src-tauri/target/
+src-tauri/gen/schemas/
+src-tauri/binaries/*.exe
+src-tauri/binaries/config.json
 
-# Cordova related directories and files
-/src-cordova/node_modules
-/src-cordova/platforms
-/src-cordova/plugins
-/src-cordova/www
+# Nuitka
+nuitka_build/
+nuitka-crash-report.xml
+*.build/
+*.dist/
+*.onefile-build/
 
-# Capacitor related directories and files
-/src-capacitor/www
-/src-capacitor/node_modules
+# Sidecar runtime
+sidecar.log
 
 # Log files
 npm-debug.log*
@@ -660,3 +661,4 @@ deps/*.whl
 schema/
 !gui_frontend/src/schema
 presets.json
+

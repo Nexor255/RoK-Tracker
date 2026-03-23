@@ -159,24 +159,51 @@
     </Card>
 
     <div class="flex justify-end pt-2">
-      <Button @click="handleSaveConfig">Save Settings</Button>
+      <Button @click="handleSaveConfig" :disabled="saving">
+        <template v-if="saving">
+          <svg class="mr-2 h-4 w-4 animate-spin" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+          </svg>
+          Saving…
+        </template>
+        <template v-else>Save Settings</template>
+      </Button>
     </div>
   </div>
 </template>
 
 <script setup lang="ts">
+import { ref } from 'vue'
 import { useConfigStore } from '@/stores/config-store'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select'
 import { Switch } from '@/components/ui/switch'
 import { Button } from '@/components/ui/button'
+import { toast } from '@/components/ui/toast'
+import * as ipc from '@/lib/ipcClient'
 
 const configStore = useConfigStore()
+const saving = ref(false)
 
-const handleSaveConfig = () => {
-  if (window.pywebview && window.pywebview.api) {
-    window.pywebview.api.SaveConfig(JSON.stringify(configStore.config))
+const handleSaveConfig = async () => {
+  saving.value = true
+  try {
+    await ipc.saveConfig(configStore.config)
+    toast({
+      title: 'Settings Saved',
+      description: 'Your configuration has been updated successfully.',
+      variant: 'success',
+    })
+  } catch (err) {
+    toast({
+      title: 'Save Failed',
+      description: String(err),
+      variant: 'destructive',
+    })
+  } finally {
+    saving.value = false
   }
 }
 </script>

@@ -89,11 +89,14 @@
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
+
+    <!-- Toast notifications -->
+    <Toaster />
   </div>
 </template>
 
 <script setup lang="ts">
-import { ref, markRaw } from 'vue'
+import { ref, markRaw, onMounted, onUnmounted } from 'vue'
 import { useDark, useToggle } from '@vueuse/core'
 import { useConfigStore } from './stores/config-store'
 import { FullConfigSchema } from './schema/FullConfig'
@@ -113,7 +116,10 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
+import { Toaster } from '@/components/ui/toast'
 import { Radar, ScanLine, Calculator, Settings } from 'lucide-vue-next'
+import { onSidecarEvent } from '@/lib/tauriClient'
+import * as ipc from '@/lib/ipcClient'
 
 const configStore = useConfigStore()
 const allianceStore = useAllianceStore()
@@ -129,7 +135,7 @@ const navItems = [
   { to: '/settings', label: 'Settings', icon: markRaw(Settings) },
 ]
 
-// Confirm dialog state (replaces $q.dialog)
+// Confirm dialog state
 const confirmDialogOpen = ref(false)
 const confirmDialogMessage = ref('')
 let confirmDialogResolve: ((value: boolean) => void) | null = null
@@ -147,110 +153,55 @@ const handleConfirmDialogResponse = (confirmed: boolean) => {
   }
 }
 
-// ---- pywebview init ----
-window.addEventListener('pywebviewready', async () => {
-  try {
-    const loadedConfig = await window.pywebview.api.LoadFullConfig()
-    console.log(loadedConfig)
-    const parsedConfig = FullConfigSchema.safeParse(JSON.parse(loadedConfig))
-
-    if (parsedConfig.success) {
-      configStore.config = parsedConfig.data
+// ---- Batch helpers ----
+const handleBatchScanId = (id: string, batchType: string) => {
+  const parsed = BatchTypeSchema.safeParse(typeof batchType === 'string' ? JSON.parse(batchType) : batchType)
+  if (parsed.success) {
+    switch (parsed.data.type) {
+      case 'Alliance': allianceStore.scanID = id; break
+      case 'Honor': honorStore.scanID = id; break
+      case 'Seed': seedStore.scanID = id; break
     }
-
-    const loadedPresets = await window.pywebview.api.LoadScanPresets()
-    console.log(loadedPresets)
-    const parsedPresets = KingdomPresetListSchema.safeParse(JSON.parse(loadedPresets))
-
-    if (parsedPresets.success && parsedPresets.data.length > 0) {
-      configStore.availableScanPresets = parsedPresets.data
-    }
-  } catch (e) {
-    console.error(e)
-  } finally {
-    window.pywebview.api.WindowReady()
   }
-})
+}
 
-// ---- Batch IPC handlers (unchanged logic) ----
-const setScanId = (id: string, batchType: string) => {
-  const parsedBatchType = BatchTypeSchema.safeParse(JSON.parse(batchType))
-
-  if (parsedBatchType.success) {
-    switch (parsedBatchType.data.type) {
+const handleBatchUpdate = (governorData: unknown, extraData: unknown, batchType: string) => {
+  const parsed = BatchTypeSchema.safeParse(typeof batchType === 'string' ? JSON.parse(batchType) : batchType)
+  if (parsed.success) {
+    const govStr = typeof governorData === 'string' ? governorData : JSON.stringify(governorData)
+    const extraStr = typeof extraData === 'string' ? extraData : JSON.stringify(extraData)
+    switch (parsed.data.type) {
       case 'Alliance':
-        allianceStore.scanID = id
+        allianceStore.lastGovernor = BatchGovernorDataListSchema.parse(JSON.parse(govStr))
+        allianceStore.status = BatchAdditionalDataSchema.parse(JSON.parse(extraStr))
         break
       case 'Honor':
-        honorStore.scanID = id
+        honorStore.lastGovernor = BatchGovernorDataListSchema.parse(JSON.parse(govStr))
+        honorStore.status = BatchAdditionalDataSchema.parse(JSON.parse(extraStr))
         break
       case 'Seed':
-        seedStore.scanID = id
-        break
-      default:
-        break
-    }
-  }
-}
-
-const governorUpdate = (governorData: string, extraData: string, batchType: string) => {
-  const parsedBatchType = BatchTypeSchema.safeParse(JSON.parse(batchType))
-  if (parsedBatchType.success) {
-    switch (parsedBatchType.data.type) {
-      case 'Alliance':
-        allianceStore.lastGovernor = BatchGovernorDataListSchema.parse(JSON.parse(governorData))
-        allianceStore.status = BatchAdditionalDataSchema.parse(JSON.parse(extraData))
-        break
-      case 'Honor':
-        honorStore.lastGovernor = BatchGovernorDataListSchema.parse(JSON.parse(governorData))
-        honorStore.status = BatchAdditionalDataSchema.parse(JSON.parse(extraData))
-        break
-      case 'Seed':
-        seedStore.lastGovernor = BatchGovernorDataListSchema.parse(JSON.parse(governorData))
-        seedStore.status = BatchAdditionalDataSchema.parse(JSON.parse(extraData))
-        break
-      default:
+        seedStore.lastGovernor = BatchGovernorDataListSchema.parse(JSON.parse(govStr))
+        seedStore.status = BatchAdditionalDataSchema.parse(JSON.parse(extraStr))
         break
     }
   }
 }
 
-const stateUpdate = (state: string, batchType: string) => {
-  const parsedBatchType = BatchTypeSchema.safeParse(JSON.parse(batchType))
-
-  if (parsedBatchType.success) {
-    switch (parsedBatchType.data.type) {
-      case 'Alliance':
-        allianceStore.statusMessage = state
-        break
-      case 'Honor':
-        honorStore.statusMessage = state
-        break
-      case 'Seed':
-        seedStore.statusMessage = state
-        break
-      default:
-        break
+const handleBatchStateUpdate = (state: string, batchType: string) => {
+  const parsed = BatchTypeSchema.safeParse(typeof batchType === 'string' ? JSON.parse(batchType) : batchType)
+  if (parsed.success) {
+    switch (parsed.data.type) {
+      case 'Alliance': allianceStore.statusMessage = state; break
+      case 'Honor': honorStore.statusMessage = state; break
+      case 'Seed': seedStore.statusMessage = state; break
     }
   }
 }
 
-const askConfirm = (message: string, batchType: string) => {
-  const parsedBatchType = BatchTypeSchema.safeParse(JSON.parse(batchType))
-
-  if (parsedBatchType.success) {
-    showConfirmDialog(message)
-    confirmDialogResolve = (confirmed: boolean) => {
-      window.pywebview.api.ConfirmCallbackBatch(confirmed, JSON.stringify(parsedBatchType.data))
-    }
-  }
-}
-
-const scanFinished = (batchType: string) => {
-  const parsedBatchType = BatchTypeSchema.safeParse(JSON.parse(batchType))
-
-  if (parsedBatchType.success) {
-    switch (parsedBatchType.data.type) {
+const handleBatchScanFinished = (batchType: string) => {
+  const parsed = BatchTypeSchema.safeParse(typeof batchType === 'string' ? JSON.parse(batchType) : batchType)
+  if (parsed.success) {
+    switch (parsed.data.type) {
       case 'Alliance':
         allianceStore.scanRunning = false
         allianceStore.startButtonDisabled = false
@@ -263,17 +214,63 @@ const scanFinished = (batchType: string) => {
         seedStore.scanRunning = false
         seedStore.startButtonDisabled = false
         break
-      default:
-        break
     }
   }
 }
 
-window.batch = {
-  setScanID: setScanId,
-  batchUpdate: governorUpdate,
-  stateUpdate: stateUpdate,
-  askConfirm: askConfirm,
-  scanFinished: scanFinished,
+// ---- Sidecar event listeners ----
+const unlisteners: Array<() => void> = []
+
+async function init() {
+  unlisteners.push(await onSidecarEvent('config_loaded', (data) => {
+    const parsed = FullConfigSchema.safeParse(data)
+    if (parsed.success) configStore.config = parsed.data
+  }))
+
+  unlisteners.push(await onSidecarEvent('presets_loaded', (data) => {
+    const parsed = KingdomPresetListSchema.safeParse(data)
+    if (parsed.success && parsed.data.length > 0) configStore.availableScanPresets = parsed.data
+  }))
+
+  unlisteners.push(await onSidecarEvent('batch_scan_id', (data) => {
+    const d = data as Record<string, unknown>
+    handleBatchScanId(d.id as string, d.type as string)
+  }))
+
+  unlisteners.push(await onSidecarEvent('batch_update', (data) => {
+    const d = data as Record<string, unknown>
+    handleBatchUpdate(d.gov, d.extra, d.type as string)
+  }))
+
+  unlisteners.push(await onSidecarEvent('batch_state_update', (data) => {
+    const d = data as Record<string, unknown>
+    handleBatchStateUpdate(d.msg as string, d.type as string)
+  }))
+
+  unlisteners.push(await onSidecarEvent('batch_ask_confirm', (data) => {
+    const d = data as Record<string, unknown>
+    showConfirmDialog(d.msg as string)
+    confirmDialogResolve = (confirmed: boolean) => {
+      const typeVal = d.type as string
+      const parsed = BatchTypeSchema.safeParse(typeof typeVal === 'string' ? JSON.parse(typeVal) : typeVal)
+      if (parsed.success) ipc.confirmBatchScan(confirmed, JSON.stringify(parsed.data))
+    }
+  }))
+
+  unlisteners.push(await onSidecarEvent('batch_scan_finished', (data) => {
+    handleBatchScanFinished(typeof data === 'string' ? data : JSON.stringify(data))
+  }))
+
+  // Load config and presets via sidecar
+  await ipc.loadFullConfig()
+  await ipc.loadScanPresets()
 }
+
+onMounted(() => {
+  init()
+})
+
+onUnmounted(() => {
+  unlisteners.forEach((fn) => fn())
+})
 </script>

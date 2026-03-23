@@ -2,31 +2,23 @@ import sys
 from pathlib import Path
 
 
-def get_app_root():
+def get_app_root() -> Path:
+    """
+    Returns the root directory where config files (config.json, presets.json) live.
+
+    - Development (plain Python):  directory containing this file (project root).
+    - Nuitka --onefile:            directory containing the .exe, exposed via
+                                   the special ``__nuitka_binary_dir`` global.
+    - PyInstaller --onefile:       ``sys._MEIPASS`` parent → use sys.executable.
+    """
+    # Nuitka --onefile sets this global to the real exe directory
+    nuitka_dir = globals().get("__nuitka_binary_dir")
+    if nuitka_dir is not None:
+        return Path(nuitka_dir)
+
+    # PyInstaller frozen bundle
     if getattr(sys, "frozen", False):
-        # If the application is run as a bundle, the PyInstaller bootloader
-        # extends the sys module by a flag frozen=True and sets the app
-        # path into variable _MEIPASS'.
         return Path(sys.executable).parent
-    else:
-        return Path(__file__).parent
 
-
-def get_script_root():
-    if getattr(sys, "frozen", False):
-        # If the application is run as a bundle, the PyInstaller bootloader
-        # extends the sys module by a flag frozen=True and sets the app
-        # path into variable _MEIPASS'.
-        return Path(sys._MEIPASS)  # type: ignore
-    else:
-        return Path(__file__).parent
-
-
-def get_web_root():
-    if getattr(sys, "frozen", False):
-        # If the application is run as a bundle, the PyInstaller bootloader
-        # extends the sys module by a flag frozen=True and sets the app
-        # path into variable _MEIPASS'.
-        return get_script_root() / "dist" / "spa"
-    else:
-        return get_script_root() / "gui_frontend" / "dist" / "spa"
+    # Normal Python execution
+    return Path(__file__).resolve().parent

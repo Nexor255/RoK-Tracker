@@ -282,7 +282,7 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { Trash2, X } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
@@ -304,6 +304,9 @@ import { KingdomGovernorDataSchema } from '@/schema/KingdomGovernorData'
 import { KingdomAdditionalDataSchema } from '@/schema/KingdomAdditionalData'
 import type { ScanPreset } from '@/schema/ScanPreset'
 import type { OutputFormat } from '@/types/OutputFormats'
+
+import * as ipc from '@/lib/ipcClient'
+import { onSidecarEvent } from '@/lib/tauriClient'
 
 const kingdomStore = useKingdomStore()
 const configStore = useConfigStore()
@@ -345,7 +348,7 @@ const confirmSavePreset = () => {
   }
   configStore.availableScanPresets.push(newPreset)
   selectedPresetName.value = newPreset.name
-  window.pywebview.api.SaveScanPresets(JSON.stringify(configStore.availableScanPresets))
+  ipc.saveScanPresets(configStore.availableScanPresets)
   saveDialogOpen.value = false
 }
 
@@ -361,7 +364,7 @@ const confirmDeletePreset = () => {
     (p) => p.name !== selectedPreset.value?.name,
   )
   selectedPresetName.value = ''
-  window.pywebview.api.SaveScanPresets(JSON.stringify(configStore.availableScanPresets))
+  ipc.saveScanPresets(configStore.availableScanPresets)
   deleteDialogOpen.value = false
 }
 
@@ -468,32 +471,31 @@ const toggleLeaf = (label: SelectionValue, checked: boolean) => {
 // ---- Scan control ----
 const handleMainButtonClick = () => {
   if (!scanRunning.value) {
-    window.pywebview.api.StartKingdomScan(
-      JSON.stringify(configStore.config),
-      JSON.stringify(selectedPreset.value),
-    )
+    ipc.startKingdomScan(configStore.config, selectedPreset.value)
     scanRunning.value = true
   } else {
-    window.pywebview.api.StopKingdomScan()
+    ipc.stopKingdomScan()
     startButtonDisabled.value = true
   }
 }
 
-// ---- IPC callbacks (same logic as before) ----
+// ---- IPC callbacks ----
 const confirmDialogOpen = ref(false)
 
 const handleConfirmResponse = (confirmed: boolean) => {
   confirmDialogOpen.value = false
-  window.pywebview.api.ConfirmCallback(confirmed)
+  ipc.confirmKingdomScan(confirmed)
 }
 
 const setScanId = (id: string) => {
   kingdomStore.scanID = id
 }
 
-const governorUpdate = (governorData: string, extraData: string) => {
-  kingdomStore.lastGovernor = KingdomGovernorDataSchema.parse(JSON.parse(governorData))
-  kingdomStore.status = KingdomAdditionalDataSchema.parse(JSON.parse(extraData))
+const governorUpdate = (governorData: string | unknown, extraData: string | unknown) => {
+  const govStr = typeof governorData === 'string' ? governorData : JSON.stringify(governorData)
+  const extraStr = typeof extraData === 'string' ? extraData : JSON.stringify(extraData)
+  kingdomStore.lastGovernor = KingdomGovernorDataSchema.parse(JSON.parse(govStr))
+  kingdomStore.status = KingdomAdditionalDataSchema.parse(JSON.parse(extraStr))
 }
 
 const stateUpdate = (state: string) => {
@@ -509,11 +511,29 @@ const scanFinished = () => {
   startButtonDisabled.value = false
 }
 
-window.kingdom = {
-  setScanID: setScanId,
-  governorUpdate: governorUpdate,
-  stateUpdate: stateUpdate,
-  askConfirm: askConfirm,
-  scanFinished: scanFinished,
-}
+// ---- Sidecar event listeners ----
+const unlisteners: Array<() => void> = []
+
+onMounted(async () => {
+  unlisteners.push(await onSidecarEvent('kingdom_scan_id', (data) => {
+    setScanId(data as string)
+  }))
+  unlisteners.push(await onSidecarEvent('kingdom_governor_update', (data) => {
+    const d = data as Record<string, unknown>
+    governorUpdate(d.gov, d.extra)
+  }))
+  unlisteners.push(await onSidecarEvent('kingdom_state_update', (data) => {
+    stateUpdate(data as string)
+  }))
+  unlisteners.push(await onSidecarEvent('kingdom_ask_confirm', (data) => {
+    askConfirm(data as string)
+  }))
+  unlisteners.push(await onSidecarEvent('kingdom_scan_finished', () => {
+    scanFinished()
+  }))
+})
+
+onUnmounted(() => {
+  unlisteners.forEach((fn) => fn())
+})
 </script>

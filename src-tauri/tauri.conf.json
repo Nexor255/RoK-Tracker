@@ -1,0 +1,39 @@
+{
+  "productName": "RoK Tracker Suite",
+  "version": "1.0.0",
+  "identifier": "com.roktracker.suite",
+  "build": {
+    "beforeDevCommand": "cd gui_frontend && pnpm run dev",
+    "devUrl": "http://localhost:3000",
+    "beforeBuildCommand": "cd gui_frontend && pnpm run build",
+    "frontendDist": "../gui_frontend/dist/spa"
+  },
+  "app": {
+    "windows": [
+      {
+        "title": "RoK Tracker Suite",
+        "width": 1150,
+        "height": 760,
+        "resizable": true,
+        "fullscreen": false
+      }
+    ],
+    "security": {
+      "csp": null
+    }
+  },
+  "bundle": {
+    "active": true,
+    "targets": "all",
+    "icon": [
+      "icons/icon.ico"
+    ],
+    "externalBin": [
+      "binaries/scanner_sidecar"
+    ],
+    "resources": {
+      "../config.json": "config.json",
+      "../deps/inputs": "deps/inputs"
+    }
+  }
+}

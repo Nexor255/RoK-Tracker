@@ -106,6 +106,7 @@ import LastBatch from './LastBatch.vue'
 import { useAllianceStore } from '@/stores/alliance-store'
 import { useConfigStore } from '@/stores/config-store'
 import type { OutputFormat } from '@/types/OutputFormats'
+import * as ipc from '@/lib/ipcClient'
 import type { BatchType } from '@/schema/BatchType'
 
 const allianceStore = useAllianceStore()
@@ -144,13 +145,10 @@ watch(selectedOutputs, (newVal) => {
 
 const handleMainButtonClick = () => {
   if (!scanRunning.value) {
-    window.pywebview.api.StartBatchScan(
-      JSON.stringify(configStore.config),
-      JSON.stringify(batchType),
-    )
+    ipc.startBatchScan(configStore.config, JSON.stringify(batchType))
     scanRunning.value = !scanRunning.value
   } else {
-    window.pywebview.api.StopBatchScan(JSON.stringify(batchType))
+    ipc.stopBatchScan(JSON.stringify(batchType))
     startButtonDisabled.value = true
   }
 }

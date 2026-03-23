@@ -1,56 +1,89 @@
-name: Package Application with Pyinstaller
+name: Test Build (Tauri + Nuitka)
 
-on: 
-    workflow_dispatch:
+on:
+  workflow_dispatch:
 
 jobs:
-  build-win64:
+  build:
     runs-on: windows-latest
+
     steps:
-      - name: (Install) python
-        uses: actions/setup-python@v4
-        with:
-          python-version: "3.11"
-          architecture: "x64"
-
-      - name: (Install) python dev tools
-        shell: bash
-        run: python -m pip install pip wheel setuptools
-
+      # ── Checkout ──────────────────────────────────────────────
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      - name: (Install) dependencies
-        run: python -m pip install -r "requirements_win64.txt"
-        shell: bash
-
-      - name: (Install) pyinstaller
-        shell: bash
-        run: | 
-          set PYINSTALLER_COMPILE_BOOTLOADER=TRUE
-          pip install pyinstaller
-
-      - name: (Create) Executable
-        shell: bash
-        run: |
-          pyinstaller \
-            --clean \
-            --noconfirm \
-            rok_tracker.spec
-
-          echo "✔️ Executables created successfully" >> $GITHUB_STEP_SUMMARY
-          echo "  - Python version used: '3.11'" >> $GITHUB_STEP_SUMMARY
-          echo "  - Python architecture used: 'x64'" >> $GITHUB_STEP_SUMMARY
-
-      - name: Prepare executable for upload
-        run: |
-          cp "config.json" "dist/RoK Tracker/config.json"
-          mkdir "dist/RoK Tracker/deps"
-          cp -r "deps/inputs/" "dist/RoK Tracker/deps/"
-          tar.exe -a -c -f "RoK Tracker.zip" -C "dist/" "RoK Tracker"
-
-      - name: Upload Artifact
-        uses: actions/upload-artifact@v3
+      # ── Python (for Nuitka sidecar) ───────────────────────────
+      - name: Set up Python 3.12
+        uses: actions/setup-python@v5
         with:
-          name: RoK Tracker
-          path: "RoK Tracker.zip"
+          python-version: "3.12"
+          architecture: "x64"
+
+      - name: Install Python dependencies
+        run: |
+          python -m pip install --upgrade pip wheel setuptools
+          python -m pip install -r requirements_win64.txt
+          python -m pip install nuitka
+
+      # ── Bundle Python sidecar with Nuitka ─────────────────────
+      - name: Build Nuitka sidecar
+        run: python scripts/bundle_sidecar.py
+
+      # ── Node.js + pnpm (for Vue frontend) ─────────────────────
+      - name: Set up Node.js 22
+        uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+
+      - name: Set up pnpm
+        uses: pnpm/action-setup@v4
+        with:
+          version: latest
+          run_install: false
+
+      - name: Install frontend dependencies
+        working-directory: gui_frontend
+        run: pnpm install
+
+      # ── Rust (for Tauri) ──────────────────────────────────────
+      - name: Set up Rust
+        uses: dtolnay/rust-toolchain@stable
+
+      - name: Cache Rust build
+        uses: actions/cache@v4
+        with:
+          path: |
+            ~/.cargo/registry
+            ~/.cargo/git
+            src-tauri/target
+          key: ${{ runner.os }}-cargo-${{ hashFiles('src-tauri/Cargo.lock') }}
+          restore-keys: ${{ runner.os }}-cargo-
+
+      # ── Build Tauri installer ─────────────────────────────────
+      - name: Build Tauri app
+        working-directory: gui_frontend
+        run: npx tauri build
+
+      - name: Summarize build
+        shell: bash
+        run: |
+          echo "### ✅ Test build complete" >> $GITHUB_STEP_SUMMARY
+          echo "" >> $GITHUB_STEP_SUMMARY
+          echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
+          echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
+          echo "| Python | 3.12 (x64) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Node | 22 |" >> $GITHUB_STEP_SUMMARY
+          echo "| Rust | stable |" >> $GITHUB_STEP_SUMMARY
+
+      # ── Upload artifacts for manual testing ───────────────────
+      - name: Upload NSIS installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: nsis-installer
+          path: src-tauri/target/release/bundle/nsis/*.exe
+
+      - name: Upload MSI installer
+        uses: actions/upload-artifact@v4
+        with:
+          name: msi-installer
+          path: src-tauri/target/release/bundle/msi/*.msi

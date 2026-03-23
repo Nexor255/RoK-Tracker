@@ -1,12 +1,13 @@
 # RokTracker
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python 3.11+](https://img.shields.io/badge/Python-3.11%2B-3776AB.svg)](https://www.python.org/)
+[![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-3776AB.svg)](https://www.python.org/)
+[![Tauri v2](https://img.shields.io/badge/Tauri-v2-FFC131.svg)](https://tauri.app/)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D6.svg)](#requirements)
 
 **Open-source Rise of Kingdoms stats management tool.** Automatically scan and track the top players in your kingdom, alliance, and honor leaderboards using OCR and ADB.
 
-Originally based on the tool by [nikolakis1919](https://github.com/nikolakis1919/RokTracker) and [Cyrexxis](https://github.com/Cyrexxis/RokTracker), this version has been heavily extended with a modern GUI, multiple OCR engines, and much more.
+Originally based on the tool by [nikolakis1919](https://github.com/nikolakis1919/RokTracker) and [Cyrexxis](https://github.com/Cyrexxis/RokTracker), this version features a modern Tauri desktop app with Vue 3 + shadcn-vue UI.
 
 ---
 
@@ -16,8 +17,8 @@ Originally based on the tool by [nikolakis1919](https://github.com/nikolakis1919
 - [Screenshots](#screenshots)
 - [Requirements](#requirements)
 - [Installation](#installation)
-  - [Simple Installation (Executable)](#simple-installation-executable)
-  - [Advanced Installation (Python)](#advanced-installation-python)
+  - [Simple Installation (Installer)](#simple-installation-installer)
+  - [Advanced Installation (From Source)](#advanced-installation-from-source)
 - [Usage](#usage)
 - [Configuration](#configuration)
 - [Emulator Setup](#emulator-setup)
@@ -25,22 +26,22 @@ Originally based on the tool by [nikolakis1919](https://github.com/nikolakis1919
   - [LD Player (Experimental)](#ld-player-experimental)
 - [Output Formats](#output-formats)
 - [Building from Source](#building-from-source)
+- [Architecture](#architecture)
 - [Important Notes](#important-notes)
 - [Troubleshooting & Support](#troubleshooting--support)
 - [License](#license)
 
 ---
 
-## What's New in v7
+## What's New in v1.0.0
 
-- **Unified application** — all 4 scanners (Kingdom, Alliance, Honor, Seed) combined into a single executable
-- **New GUI** — completely rebuilt interface using Quasar (Vue 3) + PyWebView
-- **In-app settings** — configure everything from the Settings page, no more manual `config.json` editing
-- **Historical database** — SQLite-based storage for tracking governor stats over time
-- **Scan presets** — save and load custom scan configurations
-- **Improved OCR** — better fallback handling between Tesseract and EasyOCR
+- **Tauri v2 desktop app** — replaced PyWebView + Bottle with a native Tauri shell for faster startup and smaller bundle
+- **Modern UI** — rebuilt with Vue 3, shadcn-vue, and Tailwind CSS (dark theme, responsive layout)
+- **Nuitka sidecar** — Python backend compiled with Nuitka (~99 MB, down from ~258 MB with PyInstaller)
+- **Unified installer** — single `.exe` or `.msi` installer, no Python required for end users
+- **All 4 scanners** — Kingdom, Alliance, Honor, and Seed in one application
 
-> **Note:** v7 config is not compatible with earlier versions. If upgrading, launch the app and verify your settings on the **Settings** page.
+> **Note:** v1 config is not compatible with other versions. Launch the app and verify your settings on the **Settings** page.
 
 ---
 
@@ -52,17 +53,15 @@ Originally based on the tool by [nikolakis1919](https://github.com/nikolakis1919
 - Captures: Governor ID, Name, Power, Kill Points, Ranged Points, T1–T5 Kills, Total Kills, T4+T5 Kills, Dead Troops, RSS Gathered, RSS Assistance, Helps, and Alliance Name
 - **Kill validation** — detects incorrect kills based on kill-to-killpoint ratios; saves flagged images to `manual_review/` (prefix `F`) with log warnings
 - **Kill reconstruction** — optionally attempts to recover incorrect kill data; saves images to `manual_review/` (prefix `R`) with log info
-- **Inactive detection** — automatically skips inactive accounts (those that can't be clicked in rankings); optionally saves screenshots to `inactives/`
-- **Power validation** — optional plausibility check for governor power on the power ranking page
-- **City Hall check** — optionally filter governors by minimum City Hall level
+- **Inactive detection** — automatically skips inactive accounts; optionally saves screenshots to `inactives/`
+- **Power validation** — optional plausibility check for governor power
 - **Resume scan** — continue a scan from where you left off
 - **Configurable scan presets** — choose exactly which data fields to capture
 
 ### Alliance Scanner
 
 - Complete alliance ranking scan
-- Saves governor name and score
-- Saves a screenshot of each name (since OCR accuracy is limited by game rendering)
+- Saves governor name and score with screenshot backup
 
 ### Honor Scanner
 
@@ -78,9 +77,7 @@ Originally based on the tool by [nikolakis1919](https://github.com/nikolakis1919
 
 - **Multiple OCR engines** — Tesseract and EasyOCR with configurable fallback order
 - **Multiple output formats** — XLSX, CSV, and JSONL
-- **Unified application** — single executable with all 4 scanners (Kingdom, Alliance, Honor, Seed) in one interface
-- **Modern GUI** — built with Quasar (Vue 3) + PyWebView for a native desktop experience
-- **Historical database** — SQLite-based storage for tracking governor stats over time
+- **Modern GUI** — built with Vue 3, shadcn-vue, and Tailwind CSS
 - **Emulator support** — Bluestacks 5 (recommended) and LD Player (experimental)
 - **Configurable timings** — fine-tune delays for different system speeds
 
@@ -92,108 +89,106 @@ Originally based on the tool by [nikolakis1919](https://github.com/nikolakis1919
 | :----------------------------: | :------------------------------: | :------------------------: | :----------------------: |
 | ![Kingdom](images/kingdom.png) | ![Alliance](images/alliance.png) | ![Honor](images/honor.png) | ![Seed](images/seed.png) |
 
-|            Excel Output            |          CLI Options           |
-| :--------------------------------: | :----------------------------: |
-| ![Excel](images/excel-example.png) | ![CLI](images/cmd-options.png) |
-
 ---
 
 ## Requirements
 
-| Requirement                         | Details                                                                                                                         |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------------------------- |
-| **OS**                              | Windows 10 or 11                                                                                                                |
-| **Emulator**                        | [Bluestacks 5](https://www.bluestacks.com/bluestacks-5.html) (recommended) or LD Player                                         |
-| **Tesseract Data**                  | [Trained models](https://github.com/tesseract-ocr/tessdata) — place in `deps/tessdata/`                                         |
-| **ADB Platform Tools**              | [Download](https://dl.google.com/android/repository/platform-tools_r31.0.3-windows.zip) — place in `deps/platform-tools/`       |
-| **Python** (advanced only)          | [Python 3.11+](https://www.python.org/downloads/release/python-3110/)                                                           |
-| **C++ Build Tools** (advanced only) | [Microsoft Build Tools for C++](https://visualstudio.microsoft.com/visual-cpp-build-tools/) — may be required for some packages |
+| Requirement            | Details                                                                                                                   |
+| ---------------------- | ------------------------------------------------------------------------------------------------------------------------- |
+| **OS**                 | Windows 10 or 11 (64-bit)                                                                                                 |
+| **Emulator**           | [Bluestacks 5](https://www.bluestacks.com/bluestacks-5.html) (recommended) or LD Player                                   |
+| **Tesseract Data**     | [Trained models](https://github.com/tesseract-ocr/tessdata) — place in `deps/tessdata/`                                   |
+| **ADB Platform Tools** | [Download](https://dl.google.com/android/repository/platform-tools_r31.0.3-windows.zip) — place in `deps/platform-tools/` |
+
+> For building from source, you also need: [Python 3.12+](https://www.python.org/downloads/), [Node.js 18+](https://nodejs.org/), [Rust](https://rustup.rs/), and [pnpm](https://pnpm.io/).
 
 ---
 
 ## Installation
 
-### Simple Installation (Executable)
+### Simple Installation (Installer)
 
-No Python required — just download and run.
+No Python, Node.js, or Rust required — just install and run.
 
-1. Download the latest release: **[Latest Release](https://github.com/Cyrexxis/RokTracker/releases/latest)** (choose `RoK-Scanner.zip`)
-2. Extract the zip to your desired location
-3. Download and place dependencies in the `deps/` folder:
-   - Tesseract trained data → `deps/tessdata/`
-   - ADB Platform Tools → `deps/platform-tools/`
-4. Configure your emulator ([see Emulator Setup](#emulator-setup))
-5. Double-click `RokScanner.exe` to launch — all 4 scanners are available from the single application
-6. Adjust settings from the **Settings** page inside the app
+1. **Download** the latest release: **[Latest Release](https://github.com/Cyrexxis/RokTracker/releases/latest)**
+   - Choose either `RoK-Tracker-Suite_1.0.0_x64-setup.exe` (NSIS) or `.msi` (Windows Installer)
+2. **Run the installer** — follow the setup wizard
+3. **Launch the app once** — it will auto-create the `deps/` folder structure
+4. **Add dependencies** to the `deps/` folder (located next to the installed app):
+   - Download [ADB Platform Tools](https://dl.google.com/android/repository/platform-tools_r31.0.3-windows.zip) → extract contents into `deps/platform-tools/`
+   - Download [Tesseract trained data](https://github.com/tesseract-ocr/tessdata) (`eng.traineddata` at minimum) → place in `deps/tessdata/`
+5. **Configure your emulator** ([see Emulator Setup](#emulator-setup))
+6. **Relaunch** the app — you're ready to scan!
 
-**Expected folder structure:**
+**Folder structure after first launch:**
 
 ```
-./
-├── _internal/
-├── deps/
-│   ├── inputs/
-│   ├── tessdata/
-│   │   └── *.traineddata
-│   └── platform-tools/
-│       └── adb.exe
-├── config.json
-└── RokTracker.exe
+RoK Tracker Suite/                        (install directory)
+├── RoK Tracker Suite.exe                 ← Launch this
+├── scanner_sidecar.exe                   ← Python backend (runs automatically)
+├── config.json                           ← App configuration
+└── deps/                                 ← Auto-created on first launch
+    ├── inputs/                           ← Input templates (bundled)
+    ├── tessdata/                         ← Add OCR data here
+    │   └── eng.traineddata              ← You download this
+    └── platform-tools/                   ← Add ADB here
+        └── adb.exe                      ← You download this
 ```
 
-### Advanced Installation (Python)
+### Advanced Installation (From Source)
 
-For developers or users who want to run from source.
+For developers who want to run or modify the code.
 
-1. Download the source code from the [Latest Release](https://github.com/Cyrexxis/RokTracker/releases/latest) or clone the repository
-2. Install [Python 3.11+](https://www.python.org/downloads/release/python-3110/) and [C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
-3. Download and place dependencies in the `deps/` folder (same as simple installation)
-4. Set up a virtual environment and install dependencies:
+**Prerequisites:**
+
+- [Python 3.12+](https://www.python.org/downloads/)
+- [Node.js 18+](https://nodejs.org/) with [pnpm](https://pnpm.io/)
+- [Rust](https://rustup.rs/) (for Tauri)
+- [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
+
+**Setup:**
 
 ```bash
+# 1. Clone the repository
+git clone https://github.com/Cyrexxis/RokTracker.git
+cd RokTracker
+
+# 2. Install Python dependencies
 python -m venv venv
 ./venv/Scripts/activate
 pip install -r requirements_win64.txt
+
+# 3. Install frontend dependencies
+cd gui_frontend
+pnpm install
+cd ..
+
+# 4. Place ADB and OCR data in deps/ (same as simple installation)
+
+# 5. Run in development mode
+npx --prefix gui_frontend tauri dev
 ```
 
-5. Configure your emulator ([see Emulator Setup](#emulator-setup))
-
-**Expected folder structure:**
-
-```
-./
-├── deps/
-│   ├── inputs/
-│   ├── tessdata/
-│   │   └── *.traineddata
-│   └── platform-tools/
-│       └── adb.exe
-├── roktracker/
-├── gui_frontend/
-├── config.json
-└── main.py
-```
+This opens the app with hot-reload — changes to the Vue frontend update instantly.
 
 ---
 
 ## Usage
 
-RokTracker is a single unified application that includes all 4 scanners — Kingdom, Alliance, Honor, and Seed — in one interface.
+**From installer:** Launch "RoK Tracker Suite" from the Start Menu.
 
-**Executable:** Double-click `RokScanner.exe`
-
-**From source:**
+**From source (development):**
 
 ```bash
-python main.py
+npx --prefix gui_frontend tauri dev
 ```
 
-This opens a PyWebView window with a Quasar-based GUI where you can:
+The app opens a native window where you can:
 
 - Select which scanner to run (Kingdom, Alliance, Honor, or Seed)
 - Configure scan settings and presets
 - Monitor scan progress in real time
-- View results and historical data
+- View the last scanned governor data
 
 Scan results are saved to the corresponding `scans_*/` folder (e.g., `scans_kingdom/`, `scans_alliance/`).
 
@@ -201,11 +196,11 @@ Scan results are saved to the corresponding `scans_*/` folder (e.g., `scans_king
 
 ## Configuration
 
-All settings can be configured directly from the **Settings** page inside the application. There is no need to manually edit `config.json`.
+All settings can be configured from the **Settings** page inside the application. There is no need to manually edit `config.json`.
 
 Available settings include:
 
-- **Scan** — kingdom name, number of governors, resume, scroll mode, inactive tracking, power/kill validation, kill reconstruction, City Hall filtering, and output formats (XLSX, CSV, JSONL)
+- **Scan** — kingdom name, number of governors, resume, scroll mode, inactive tracking, power/kill validation, kill reconstruction, and output formats (XLSX, CSV, JSONL)
 - **OCR** — engine fallback order (Tesseract / EasyOCR), page segmentation mode, OCR engine mode, languages, and GPU toggle
 - **Emulator** — emulator type (Bluestacks or LD Player), instance name, config file path, and ADB port
 
@@ -247,32 +242,63 @@ Select **LD Player** as the emulator in the app's **Settings** page. LD Player s
 | **CSV**   | `.csv`    | Comma-separated values for easy import          |
 | **JSONL** | `.jsonl`  | JSON Lines — one JSON object per line           |
 
-Configure which formats to generate in the **Settings** page of the app.
+Configure which formats to generate in the **Settings** page.
 
 ---
 
 ## Building from Source
 
-To build the standalone executable yourself:
+To build the standalone installer yourself:
 
 ```bash
-# Install Python dependencies
-pip install -r requirements_win64.txt
-pip install pyinstaller-hooks-contrib
+# 1. Activate your Python virtual environment
+./venv/Scripts/activate
 
-# Build the frontend
-cd gui_frontend
-pnpm install
-pnpm run build
-cd ..
+# 2. Bundle the Python sidecar with Nuitka (~20-30 min first time)
+python scripts/bundle_sidecar.py
 
-# Build the executable
-python build.py
+# 3. Build the Tauri installer
+npx --prefix gui_frontend tauri build
 ```
 
-The executable will be created in the `publish/` directory.
+The installer will be created at:
 
-For detailed build instructions, see [BUILD.md](BUILD.md).
+- **NSIS:** `src-tauri/target/release/bundle/nsis/RoK Tracker Suite_x.x.x_x64-setup.exe`
+- **MSI:** `src-tauri/target/release/bundle/msi/RoK Tracker Suite_x.x.x_x64_en-US.msi`
+
+> **Note:** The first Nuitka build takes 20–30 minutes because it compiles Python to C code. Subsequent builds are cached and much faster.
+
+---
+
+## Architecture
+
+```
+┌─────────────────────────────────────┐
+│           Tauri v2 Shell            │
+│  ┌───────────────────────────────┐  │
+│  │   Vue 3 + shadcn-vue Frontend│  │
+│  │   (HTML/CSS/JS in WebView)   │  │
+│  └──────────────┬────────────────┘  │
+│                 │ invoke / listen    │
+│  ┌──────────────▼────────────────┐  │
+│  │   Rust Backend (commands.rs)  │  │
+│  │   Sidecar Manager (sidecar.rs)│  │
+│  └──────────────┬────────────────┘  │
+│                 │ stdin/stdout JSON  │
+│  ┌──────────────▼────────────────┐  │
+│  │   Python Sidecar (Nuitka exe) │  │
+│  │   scanner_sidecar.py          │  │
+│  │   └── roktracker/ (scanners)  │  │
+│  └───────────────────────────────┘  │
+└─────────────────────────────────────┘
+```
+
+| Component          | Technology                         | Purpose                           |
+| ------------------ | ---------------------------------- | --------------------------------- |
+| **Desktop shell**  | Tauri v2 (Rust)                    | Native window, IPC, bundling      |
+| **Frontend**       | Vue 3, shadcn-vue, Tailwind CSS    | UI (pages, components, styling)   |
+| **Backend bridge** | Rust (`commands.rs`, `sidecar.rs`) | Routes commands to Python sidecar |
+| **Scanner engine** | Python (Nuitka-compiled)           | OCR, ADB, data processing         |
 
 ---
 
@@ -280,42 +306,47 @@ For detailed build instructions, see [BUILD.md](BUILD.md).
 
 ### Before Scanning
 
-1. **Game language must be English.** Other languages will cause issues with inactive governor detection. Switch for the scan, then switch back.
-2. **Your character must be in the HOME KINGDOM** to get only your kingdom's ranks. Otherwise, you'll capture KvK players from all kingdoms.
+1. **Game language must be English.** Other languages will cause issues with inactive governor detection.
+2. **Your character must be in the HOME KINGDOM** to get only your kingdom's ranks.
 3. **Position the game correctly** before starting:
    - Kingdom scan: top of power rankings or kill points rankings
    - Alliance scan: top of the desired alliance leaderboard
    - Honor scan: top of the personal honor rankings
 4. **Do not interact with the emulator** while scanning is in progress.
-5. **[Kingdom scan]** Your account must rank lower than the number of players you want to scan (e.g., you can't scan the top 100 if your rank is 85 — use a farm account).
-6. **[Kingdom scan]** The resume option starts scanning from the 4th governor visible on screen (the middle one). Position the view accordingly before resuming.
+5. **[Kingdom scan]** Your account must rank lower than the number of players you want to scan.
+6. **[Kingdom scan]** The resume option starts scanning from the 4th governor visible on screen.
 
 ### General
 
 - The scanner **does not require admin privileges**.
 - Chinese characters may not display correctly in the terminal but will appear correctly in the output files.
-- You can use your computer normally while scanning, but avoid copying to the clipboard as it may interfere with governor name capture.
-- Always **back up your scan output files** — subsequent scans have a small chance of overwriting previous results.
-
-> **Version 7 config is not compatible with earlier versions.** If upgrading, launch the app and verify your settings on the **Settings** page.
+- Avoid copying to the clipboard during scanning as it may interfere with governor name capture.
+- Always **back up your scan output files**.
 
 ---
 
 ## Troubleshooting & Support
 
-**Wiki:** Check the [Wiki](https://github.com/Cyrexxis/RokTracker/wiki/) for detailed explanations and guides.
+**Common Issues:**
 
-**GitHub Discussions:** Post questions in [GitHub Discussions](https://github.com/Cyrexxis/RokTracker/discussions) so others can benefit from the answers.
+| Problem                            | Solution                                                                        |
+| ---------------------------------- | ------------------------------------------------------------------------------- |
+| App shows "Config file is missing" | Ensure `config.json` is next to the app exe                                     |
+| "deps not found" or scanner fails  | Create `deps/` folder with ADB and OCR data (see [Installation](#installation)) |
+| Sidecar won't start                | Check `sidecar.log` in the app directory for errors                             |
+| Emulator not detected              | Verify ADB is in `deps/platform-tools/` and emulator has ADB enabled            |
+
+**Wiki:** Check the [Wiki](https://github.com/Cyrexxis/RokTracker/wiki/) for detailed guides.
+
+**GitHub Discussions:** Post questions in [GitHub Discussions](https://github.com/Cyrexxis/RokTracker/discussions).
 
 **Discord:** `cyrexxis` — available on the official RoK Server and the Chisgule server.
 
 When requesting help, please include:
 
 - A clear description of the problem
-- Your log file (`*-scanner-web.log` or the relevant log)
-- Your `config.json` file (located in the app folder — remove any sensitive paths before sharing)
-
-> _"It doesn't work"_ without details will be ignored. This is a free-time project — please respect that.
+- Your `sidecar.log` file (in the app directory)
+- Your `config.json` file (remove sensitive paths before sharing)
 
 ---
 
@@ -323,4 +354,4 @@ When requesting help, please include:
 
 This project is licensed under the [MIT License](LICENSE).
 
-Copyright (c) 2021–2022 [nikolakis1919](https://github.com/nikolakis1919) · Copyright (c) 2022–2024 [Cyrexxis](https://github.com/Cyrexxis)
+Copyright (c) 2021–2022 [nikolakis1919](https://github.com/nikolakis1919) · Copyright (c) 2022–2026 [Cyrexxis](https://github.com/Cyrexxis)
