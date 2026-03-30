@@ -69,3 +69,13 @@ def preprocess_and_ocr_number(
 
 def get_supported_langs(path: str) -> str:
     return str(tesserocr.get_languages(path))  # type: ignore
+
+
+def pil_to_cv2(pil_image) -> MatLike:
+    """Convert a PIL Image to an OpenCV numpy array (BGR format)."""
+    import numpy as np
+
+    rgb = np.array(pil_image)
+    if len(rgb.shape) == 3 and rgb.shape[2] >= 3:
+        return cv2.cvtColor(rgb, cv2.COLOR_RGB2BGR)
+    return rgb

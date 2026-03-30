@@ -11,6 +11,9 @@ export const FullConfigSchema = z.object({
     power_threshold: z.number().int().default(100000),
     validate_kills: z.boolean().default(true),
     reconstruct_kills: z.boolean().default(true),
+    check_cityhall: z.boolean().default(false),
+    min_ch_level: z.number().int().default(25),
+    ch_auto_assign_power: z.number().int().default(25000000),
     timings: z.object({
       gov_open: z.number().default(2),
       copy_wait: z.number().default(0.2),

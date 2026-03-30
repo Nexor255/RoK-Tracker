@@ -15,6 +15,9 @@ export const useConfigStore = defineStore('configStore', () => {
       power_threshold: 100000,
       validate_kills: true,
       reconstruct_kills: true,
+      check_cityhall: false,
+      min_ch_level: 25,
+      ch_auto_assign_power: 25000000,
       timings: {
         gov_open: 2,
         copy_wait: 0.2,

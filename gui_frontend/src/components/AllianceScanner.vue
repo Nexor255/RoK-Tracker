@@ -2,63 +2,44 @@
   <div class="flex gap-4">
     <!-- Left panel: controls -->
     <div class="flex w-2/3 flex-col gap-3">
-      <div class="flex gap-3">
-        <div class="flex-[2]">
-          <Input
-            v-model="configStore.config.scan.kingdom_name"
-            label="Scan name"
-            hint="This will get prepended to the file name"
-            :disabled="scanRunning"
-          />
-        </div>
-        <div class="flex-1 space-y-1">
-          <label class="text-sm font-medium">Output formats</label>
-          <div class="flex flex-wrap gap-1 rounded-md border p-2 min-h-[36px]">
-            <Badge
-              v-for="(fmt, idx) in selectedOutputs"
+      <div class="grid grid-cols-2 gap-3">
+        <Input
+          v-model="configStore.config.scan.kingdom_name"
+          label="Scan name"
+          hint="This will get prepended to the file name"
+          :disabled="scanRunning"
+        />
+        <div class="space-y-1.5 flex flex-col justify-end">
+          <label class="text-sm font-medium leading-none">Output formats</label>
+          <div class="flex gap-2">
+            <Button
+              v-for="fmt in outputFormats"
               :key="fmt.value"
-              variant="outline"
-              class="flex items-center gap-1 cursor-pointer"
-              @click="removeOutput(idx)"
+              :variant="isFormatSelected(fmt) ? 'default' : 'outline'"
+              size="sm"
+              @click="toggleFormat(fmt)"
+              :disabled="scanRunning"
+              class="text-xs"
             >
               {{ fmt.display }}
-              <X class="h-3 w-3" />
-            </Badge>
-          </div>
-          <div class="flex gap-1 mt-1">
-            <Button
-              v-for="fmt in availableOutputFormats"
-              :key="fmt.value"
-              variant="ghost"
-              size="sm"
-              @click="addOutput(fmt)"
-              :disabled="scanRunning"
-              class="text-xs h-6"
-            >
-              + {{ fmt.display }}
             </Button>
           </div>
-          <p class="text-xs text-muted-foreground">The format you want</p>
         </div>
       </div>
 
-      <div class="flex gap-3">
-        <div class="flex-1">
-          <Input
-            v-model="configStore.config.general.bluestacks.name"
-            label="Emulator name"
-            hint="Works only for BlueStacks"
-            :disabled="scanRunning"
-          />
-        </div>
-        <div class="flex-1">
-          <Input
-            v-model="configStore.config.general.adb_port"
-            label="ADB Port of emulator"
-            hint="Should be autofilled if emulator is found"
-            :disabled="scanRunning"
-          />
-        </div>
+      <div class="grid grid-cols-2 gap-3">
+        <Input
+          v-model="configStore.config.general.bluestacks.name"
+          label="Emulator name"
+          hint="Works only for BlueStacks"
+          :disabled="scanRunning"
+        />
+        <Input
+          v-model="configStore.config.general.adb_port"
+          label="ADB Port of emulator"
+          hint="Should be autofilled if emulator is found"
+          :disabled="scanRunning"
+        />
       </div>
 
       <Input
@@ -95,12 +76,10 @@
 </template>
 
 <script setup lang="ts">
-import { computed, ref, watch } from 'vue'
+import { ref, watch } from 'vue'
 import { storeToRefs } from 'pinia'
-import { X } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
-import { Badge } from '@/components/ui/badge'
 import ScanStatus from './ScanStatus.vue'
 import LastBatch from './LastBatch.vue'
 import { useAllianceStore } from '@/stores/alliance-store'
@@ -125,16 +104,16 @@ const selectedOutputs = ref<OutputFormat[]>([
   { label: 'Excel', value: 'xlsx', display: 'xlsx' },
 ])
 
-const availableOutputFormats = computed(() =>
-  outputFormats.filter(f => !selectedOutputs.value.some(s => s.value === f.value))
-)
-
-const addOutput = (fmt: OutputFormat) => {
-  selectedOutputs.value.push(fmt)
+const isFormatSelected = (fmt: OutputFormat): boolean => {
+  return selectedOutputs.value.some(s => s.value === fmt.value)
 }
 
-const removeOutput = (index: number) => {
-  selectedOutputs.value.splice(index, 1)
+const toggleFormat = (fmt: OutputFormat) => {
+  if (isFormatSelected(fmt)) {
+    selectedOutputs.value = selectedOutputs.value.filter(s => s.value !== fmt.value)
+  } else {
+    selectedOutputs.value.push(fmt)
+  }
 }
 
 watch(selectedOutputs, (newVal) => {

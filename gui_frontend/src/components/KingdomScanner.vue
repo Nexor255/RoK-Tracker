@@ -3,7 +3,7 @@
     <!-- Left Column: Controls (Presets & Tree) -->
     <div class="flex flex-col gap-3 lg:col-span-2 min-h-0 overflow-y-auto">
       <!-- Preset + tree + actions -->
-      
+
       <!-- Scan Preset Select -->
       <div class="space-y-1">
         <label class="text-sm font-medium">Scan Preset</label>
@@ -56,9 +56,17 @@
                 <span class="text-xs font-medium text-muted-foreground">{{ subGroup.label }}</span>
               </div>
               <div v-if="subGroup.children" class="ml-4 space-y-0.5">
-                <div v-for="leaf in subGroup.children" :key="leaf.label" class="flex items-center gap-2">
+                <div
+                  v-for="leaf in subGroup.children"
+                  :key="leaf.label"
+                  class="flex items-center gap-2"
+                >
                   <Checkbox
-                    :checked="configStore.selectedKingdomOptions.selections.includes(leaf.label as SelectionValue)"
+                    :checked="
+                      configStore.selectedKingdomOptions.selections.includes(
+                        leaf.label as SelectionValue,
+                      )
+                    "
                     @update:checked="toggleLeaf(leaf.label as SelectionValue, $event)"
                     :disabled="scanRunning"
                   />
@@ -84,8 +92,8 @@
     </div>
 
     <!-- Middle Column: Form Settings -->
-    <div class="flex flex-col gap-4 lg:col-span-6 min-h-0 overflow-y-auto pr-1">
-      <div class="flex flex-col gap-4">
+    <div class="flex flex-col gap-6 lg:col-span-6 min-h-0 overflow-y-auto pr-1">
+      <div class="flex flex-col gap-6">
         <!-- General -->
         <div class="grid grid-cols-2 gap-4">
           <Input
@@ -94,32 +102,20 @@
             hint="Prepended to file name"
             :disabled="scanRunning"
           />
-          
+
           <div class="space-y-1.5 flex flex-col justify-end">
             <label class="text-sm font-medium leading-none">Output formats</label>
-            <div class="flex flex-wrap gap-1 rounded-md border p-1.5 min-h-[38px] bg-background">
-              <Badge
-                v-for="(fmt, idx) in selectedOutputs"
+            <div class="flex gap-2">
+              <Button
+                v-for="fmt in outputFormats"
                 :key="fmt.value"
-                variant="secondary"
-                class="flex items-center gap-1 cursor-pointer hover:bg-destructive/10 hover:text-destructive transition-colors"
-                @click="removeOutput(idx)"
+                :variant="isFormatSelected(fmt) ? 'default' : 'outline'"
+                size="sm"
+                @click="toggleFormat(fmt)"
+                :disabled="scanRunning"
+                class="text-xs"
               >
                 {{ fmt.display }}
-                <X class="h-3 w-3" />
-              </Badge>
-            </div>
-            <div class="flex flex-wrap gap-1 mt-1">
-              <Button
-                v-for="fmt in availableOutputFormats"
-                :key="fmt.value"
-                variant="ghost"
-                size="sm"
-                @click="addOutput(fmt)"
-                :disabled="scanRunning"
-                class="text-[10px] h-5 px-2"
-              >
-                + {{ fmt.display }}
               </Button>
             </div>
           </div>
@@ -246,7 +242,9 @@
         <Input v-model="newPresetName" placeholder="Preset name" />
         <AlertDialogFooter>
           <AlertDialogCancel @click="saveDialogOpen = false">Cancel</AlertDialogCancel>
-          <AlertDialogAction @click="confirmSavePreset" :disabled="!newPresetName">Save</AlertDialogAction>
+          <AlertDialogAction @click="confirmSavePreset" :disabled="!newPresetName"
+            >Save</AlertDialogAction
+          >
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
@@ -261,7 +259,11 @@
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel @click="deleteDialogOpen = false">No</AlertDialogCancel>
-          <AlertDialogAction @click="confirmDeletePreset" class="bg-destructive text-destructive-foreground hover:bg-destructive/90">Yes, delete</AlertDialogAction>
+          <AlertDialogAction
+            @click="confirmDeletePreset"
+            class="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+            >Yes, delete</AlertDialogAction
+          >
         </AlertDialogFooter>
       </AlertDialogContent>
     </AlertDialog>
@@ -283,18 +285,27 @@
 
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
-import { Trash2, X } from 'lucide-vue-next'
+import { Trash2 } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
-import { Badge } from '@/components/ui/badge'
 import { Checkbox } from '@/components/ui/checkbox'
 import {
-  Select, SelectContent, SelectItem, SelectTrigger, SelectValue,
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
 } from '@/components/ui/select'
 import {
-  AlertDialog, AlertDialogAction, AlertDialogCancel, AlertDialogContent,
-  AlertDialogDescription, AlertDialogFooter, AlertDialogHeader, AlertDialogTitle,
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
 import LastGovernor from './LastGovernor.vue'
 import ScanStatus from './ScanStatus.vue'
@@ -323,7 +334,7 @@ const startBtnVariant = computed(() => {
 // ---- Preset management ----
 const selectedPresetName = ref(configStore.availableScanPresets[0]?.name ?? '')
 const selectedPreset = computed(() =>
-  configStore.availableScanPresets.find(p => p.name === selectedPresetName.value)
+  configStore.availableScanPresets.find((p) => p.name === selectedPresetName.value),
 )
 
 watch(selectedPresetName, () => {
@@ -375,27 +386,29 @@ const outputFormats: OutputFormat[] = [
   { label: 'JSON Lines (jsonl)', value: 'jsonl', display: 'jsonl' },
 ]
 
-const selectedOutputs = ref<OutputFormat[]>([
-  { label: 'Excel', value: 'xlsx', display: 'xlsx' },
-])
+const selectedOutputs = ref<OutputFormat[]>([{ label: 'Excel', value: 'xlsx', display: 'xlsx' }])
 
-const availableOutputFormats = computed(() =>
-  outputFormats.filter(f => !selectedOutputs.value.some(s => s.value === f.value))
+const isFormatSelected = (fmt: OutputFormat): boolean => {
+  return selectedOutputs.value.some((s) => s.value === fmt.value)
+}
+
+const toggleFormat = (fmt: OutputFormat) => {
+  if (isFormatSelected(fmt)) {
+    selectedOutputs.value = selectedOutputs.value.filter((s) => s.value !== fmt.value)
+  } else {
+    selectedOutputs.value.push(fmt)
+  }
+}
+
+watch(
+  selectedOutputs,
+  (newVal) => {
+    configStore.config.scan.formats.csv = newVal.some((f) => f.value === 'csv')
+    configStore.config.scan.formats.jsonl = newVal.some((f) => f.value === 'jsonl')
+    configStore.config.scan.formats.xlsx = newVal.some((f) => f.value === 'xlsx')
+  },
+  { deep: true },
 )
-
-const addOutput = (fmt: OutputFormat) => {
-  selectedOutputs.value.push(fmt)
-}
-
-const removeOutput = (index: number) => {
-  selectedOutputs.value.splice(index, 1)
-}
-
-watch(selectedOutputs, (newVal) => {
-  configStore.config.scan.formats.csv = newVal.some((f) => f.value === 'csv')
-  configStore.config.scan.formats.jsonl = newVal.some((f) => f.value === 'jsonl')
-  configStore.config.scan.formats.xlsx = newVal.some((f) => f.value === 'xlsx')
-}, { deep: true })
 
 // ---- Tree (info to scan) ----
 interface TreeNode {
@@ -410,22 +423,31 @@ const infoToScan: TreeNode[] = [
       {
         label: 'First Screen',
         children: [
-          { label: 'ID' }, { label: 'Name' }, { label: 'Power' },
-          { label: 'Killpoints' }, { label: 'Alliance' },
+          { label: 'ID' },
+          { label: 'Name' },
+          { label: 'Power' },
+          { label: 'Killpoints' },
+          { label: 'Alliance' },
         ],
       },
       {
         label: 'Second Screen',
         children: [
-          { label: 'T1 Kills' }, { label: 'T2 Kills' }, { label: 'T3 Kills' },
-          { label: 'T4 Kills' }, { label: 'T5 Kills' }, { label: 'Ranged' },
+          { label: 'T1 Kills' },
+          { label: 'T2 Kills' },
+          { label: 'T3 Kills' },
+          { label: 'T4 Kills' },
+          { label: 'T5 Kills' },
+          { label: 'Ranged' },
         ],
       },
       {
         label: 'Third Screen',
         children: [
-          { label: 'Deaths' }, { label: 'Assistance' },
-          { label: 'Gathered' }, { label: 'Helps' },
+          { label: 'Deaths' },
+          { label: 'Assistance' },
+          { label: 'Gathered' },
+          { label: 'Helps' },
         ],
       },
     ],
@@ -441,18 +463,17 @@ const getLeaves = (node: TreeNode): SelectionValue[] => {
 
 const isGroupChecked = (node: TreeNode): boolean => {
   const leaves = getLeaves(node)
-  return leaves.every(l => configStore.selectedKingdomOptions.selections.includes(l))
+  return leaves.every((l) => configStore.selectedKingdomOptions.selections.includes(l))
 }
 
 const toggleGroup = (node: TreeNode, checked: boolean) => {
   const leaves = getLeaves(node)
   if (checked) {
-    const toAdd = leaves.filter(l => !configStore.selectedKingdomOptions.selections.includes(l))
+    const toAdd = leaves.filter((l) => !configStore.selectedKingdomOptions.selections.includes(l))
     configStore.selectedKingdomOptions.selections.push(...toAdd)
   } else {
-    configStore.selectedKingdomOptions.selections = configStore.selectedKingdomOptions.selections.filter(
-      s => !(leaves as string[]).includes(s)
-    )
+    configStore.selectedKingdomOptions.selections =
+      configStore.selectedKingdomOptions.selections.filter((s) => !(leaves as string[]).includes(s))
   }
 }
 
@@ -462,9 +483,8 @@ const toggleLeaf = (label: SelectionValue, checked: boolean) => {
       configStore.selectedKingdomOptions.selections.push(label)
     }
   } else {
-    configStore.selectedKingdomOptions.selections = configStore.selectedKingdomOptions.selections.filter(
-      s => s !== label
-    )
+    configStore.selectedKingdomOptions.selections =
+      configStore.selectedKingdomOptions.selections.filter((s) => s !== label)
   }
 }
 
@@ -515,22 +535,32 @@ const scanFinished = () => {
 const unlisteners: Array<() => void> = []
 
 onMounted(async () => {
-  unlisteners.push(await onSidecarEvent('kingdom_scan_id', (data) => {
-    setScanId(data as string)
-  }))
-  unlisteners.push(await onSidecarEvent('kingdom_governor_update', (data) => {
-    const d = data as Record<string, unknown>
-    governorUpdate(d.gov, d.extra)
-  }))
-  unlisteners.push(await onSidecarEvent('kingdom_state_update', (data) => {
-    stateUpdate(data as string)
-  }))
-  unlisteners.push(await onSidecarEvent('kingdom_ask_confirm', (data) => {
-    askConfirm(data as string)
-  }))
-  unlisteners.push(await onSidecarEvent('kingdom_scan_finished', () => {
-    scanFinished()
-  }))
+  unlisteners.push(
+    await onSidecarEvent('kingdom_scan_id', (data) => {
+      setScanId(data as string)
+    }),
+  )
+  unlisteners.push(
+    await onSidecarEvent('kingdom_governor_update', (data) => {
+      const d = data as Record<string, unknown>
+      governorUpdate(d.gov, d.extra)
+    }),
+  )
+  unlisteners.push(
+    await onSidecarEvent('kingdom_state_update', (data) => {
+      stateUpdate(data as string)
+    }),
+  )
+  unlisteners.push(
+    await onSidecarEvent('kingdom_ask_confirm', (data) => {
+      askConfirm(data as string)
+    }),
+  )
+  unlisteners.push(
+    await onSidecarEvent('kingdom_scan_finished', () => {
+      scanFinished()
+    }),
+  )
 })
 
 onUnmounted(() => {

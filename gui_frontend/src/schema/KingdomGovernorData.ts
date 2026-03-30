@@ -21,6 +21,7 @@ export const KingdomGovernorDataSchema = z.object({
   rss_assistance: z.union([z.number().int(), z.string()]).default("Skipped"),
   rss_gathered: z.union([z.number().int(), z.string()]).default("Skipped"),
   helps: z.union([z.number().int(), z.string()]).default("Skipped"),
+  city_hall_level: z.number().int().default(0),
   t45_kills: z.union([z.number().int(), z.string()]).readonly(),
   total_kills: z.union([z.number().int(), z.string()]).readonly(),
 });

@@ -27,6 +27,7 @@ export const useKingdomStore = defineStore('kingdom', () => {
     rss_assistance: 1000000,
     rss_gathered: 1000000,
     helps: 1000000,
+    city_hall_level: 0,
   })
 
   const status = ref<KingdomAdditionalData>({
@@ -37,6 +38,9 @@ export const useKingdomStore = defineStore('kingdom', () => {
     kills_ok: 'Not Checked',
     reconstruction_success: 'Not Checked',
     remaining_sec: 300,
+    ch_verification_mode: false,
+    ch_current_governor: 0,
+    ch_total_governors: 0,
     current_time: new Date().toISOString(),
   })
 

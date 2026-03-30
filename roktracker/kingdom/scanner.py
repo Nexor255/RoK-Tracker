@@ -13,10 +13,11 @@ from pathlib import Path
 from roktracker.utils.adb import *
 from roktracker.utils.general import *
 from roktracker.utils.ocr import *
+from roktracker.utils.ch_matcher import CHLevelMatcher
 from roktracker.kingdom.types.additional_data import AdditionalData
 from roktracker.kingdom.types.governor_data import GovernorData
 from tesserocr import PyTessBaseAPI, PSM, OEM  # type: ignore (tesserocr has no type defs)
-from typing import Callable
+from typing import Callable, List
 from PIL import Image
 
 from roktracker.utils.types.full_config import FormatsConfig, FullConfig
@@ -97,6 +98,13 @@ class KingdomScanner:
         self.state_callback = default_state_callback
         self.ask_continue = default_ask_continue
         self.output_handler = default_output_handler
+
+        # City Hall verification state
+        self._in_search_screen = False
+        self._ch_matcher = CHLevelMatcher(
+            self.root_dir / "deps" / "ch_templates" / "city_hall_numbers",
+            self.tesseract_path,
+        )
 
         self.adb_client = AdvancedAdbClient(
             str(self.root_dir / "deps" / "platform-tools" / "adb.exe"),
@@ -515,6 +523,205 @@ class KingdomScanner:
 
         return governor_data
 
+    # ------------------------------------------------------------------
+    # City Hall verification methods
+    # ------------------------------------------------------------------
+
+    def get_governors_needing_ch(
+        self, data_list: list, min_power: int = 25_000_000
+    ) -> List[GovernorData]:
+        """Identify governors that need in-game CH verification.
+
+        - Governors with power >= min_power are auto-assigned CH 25.
+        - Returns governors with 0 < power < min_power and city_hall_level == 0.
+        """
+        needing_check = []
+        for entry in data_list:
+            gov_power = entry.get("Power", 0)
+            gov_id = entry.get("ID", 0)
+            current_ch = entry.get("City Hall Level", 0)
+
+            if gov_power <= 0 or gov_id <= 0:
+                continue
+
+            if current_ch > 0:
+                # Already set (e.g., from a resumed scan)
+                continue
+
+            if gov_power >= min_power:
+                # Auto-assign CH 25 for high-power governors
+                entry["City Hall Level"] = 25
+            else:
+                # Create a minimal GovernorData for the check
+                gov = GovernorData(id=gov_id, power=gov_power)
+                needing_check.append(gov)
+
+        return needing_check
+
+    def _navigate_to_search_screen(self, tap_positions: dict) -> None:
+        """Navigate from the ranking list to the governor search screen."""
+        if self._in_search_screen:
+            return
+
+        self.state_callback("Navigating to search screen")
+        # Close any open panels
+        self.adb_client.secure_adb_tap(tap_positions["back_button"])
+        time.sleep(0.5)
+        self.adb_client.secure_adb_tap(tap_positions["back_button"])
+        time.sleep(0.5)
+
+        # Open settings / search
+        self.adb_client.secure_adb_tap(tap_positions["settings"])
+        time.sleep(1.0)
+        self.adb_client.secure_adb_tap(tap_positions["search_gov_button"])
+        time.sleep(1.0)
+
+        self._in_search_screen = True
+        self._first_search = True  # Track first search to skip field clearing
+
+    def check_city_hall_level(
+        self, governor_id: str, tap_positions: dict
+    ) -> int:
+        """Look up a governor by ID and read their City Hall level.
+
+        Uses template matching as the primary method with Tesseract OCR fallback.
+        Returns the CH level (1-25) or 0 if identification fails.
+        """
+        # Navigate to search screen if not already there
+        self._navigate_to_search_screen(tap_positions)
+
+        # Clear previous ID (skip on first entry)
+        if not self._first_search:
+            # Tap the input field first
+            self.adb_client.secure_adb_tap(tap_positions["id_input_field"])
+            time.sleep(0.3)
+            # Send DEL keys to clear the field
+            for _ in range(15):
+                self.adb_client.secure_adb_shell("input keyevent KEYCODE_DEL")
+        else:
+            # Tap input field on first search
+            self.adb_client.secure_adb_tap(tap_positions["id_input_field"])
+            time.sleep(0.3)
+            self._first_search = False
+
+        # Input governor ID
+        self.adb_client.secure_adb_shell(f"input text {governor_id}")
+        time.sleep(0.3)
+
+        # Double-tap search button
+        self.adb_client.secure_adb_tap(tap_positions["search_button"])
+        time.sleep(0.3)
+        self.adb_client.secure_adb_tap(tap_positions["search_button"])
+
+        # Retry loop with exponential backoff
+        backoff_times = [1.0, 1.5, 2.25]
+        ch_level = 0
+
+        for attempt, wait_time in enumerate(backoff_times):
+            time.sleep(wait_time)
+
+            # Take screenshot and crop the CH level region (with padding)
+            screenshot = self.adb_client.secure_adb_screencap()
+            screenshot_cv2 = pil_to_cv2(screenshot)
+            crop = cropToRegion(screenshot_cv2, rok_ui.ch_level_region_padded)
+
+            # Try to identify CH level
+            ch_level = self._ch_matcher.identify(crop)
+
+            if 1 <= ch_level <= 25:
+                logger.info(
+                    f"CH level for governor {governor_id}: {ch_level} "
+                    f"(attempt {attempt + 1})"
+                )
+                return ch_level
+
+            logger.debug(
+                f"CH identification attempt {attempt + 1} failed for governor {governor_id}"
+            )
+
+        # All attempts failed — save debug image
+        try:
+            debug_path = self.img_path / f"ch_level_region_{governor_id}.png"
+            write_cv2_img(crop, debug_path, "png")
+            logger.warning(
+                f"Failed to identify CH level for governor {governor_id}. "
+                f"Debug image saved to {debug_path}"
+            )
+        except Exception as e:
+            logger.warning(f"Failed to save debug image: {e}")
+
+        return 0
+
+    def _run_ch_verification_pass(
+        self, data_handler: PandasHandler, tap_positions: dict
+    ) -> None:
+        """Second pass: verify City Hall levels for governors that need it."""
+        if not self.config.scan.check_cityhall:
+            return
+        if self.stop_scan:
+            return
+
+        self.state_callback("Starting CH verification")
+        self.output_handler("Starting City Hall level verification pass...")
+
+        min_power = self.config.scan.ch_auto_assign_power
+        governors_needing_ch = self.get_governors_needing_ch(
+            data_handler.data_list, min_power
+        )
+
+        if not governors_needing_ch:
+            self.output_handler("No governors need CH verification.")
+            return
+
+        self.output_handler(
+            f"Verifying CH level for {len(governors_needing_ch)} governors..."
+        )
+
+        for i, gov in enumerate(governors_needing_ch):
+            if self.stop_scan:
+                self.output_handler("CH verification stopped.")
+                break
+
+            self.state_callback(
+                f"Verifying CH: {i + 1}/{len(governors_needing_ch)}"
+            )
+
+            ch_level = self.check_city_hall_level(
+                str(gov.id), tap_positions
+            )
+
+            if ch_level > 0:
+                gov.city_hall_level = ch_level
+                data_handler.update_governor(gov)
+                data_handler.save()  # Incremental save for crash recovery
+
+            # Emit progress callback
+            self.gov_callback(
+                gov,
+                AdditionalData(
+                    current_governor=i + 1,
+                    target_governor=len(governors_needing_ch),
+                    skipped_governors=0,
+                    power_ok="Not Checked",
+                    kills_ok="Not Checked",
+                    reconstruction_success="Not Checked",
+                    remaining_sec=0,
+                    ch_verification_mode=True,
+                    ch_current_governor=i + 1,
+                    ch_total_governors=len(governors_needing_ch),
+                ),
+            )
+
+        # Clean up: exit search screen
+        if self._in_search_screen:
+            self.adb_client.secure_adb_tap(tap_positions["back_button"])
+            time.sleep(0.5)
+            self.adb_client.secure_adb_tap(tap_positions["back_button"])
+            self._in_search_screen = False
+
+        data_handler.save()
+        self.output_handler("CH verification pass complete.")
+
     def start_scan(
         self,
         kingdom: str,
@@ -676,6 +883,10 @@ class KingdomScanner:
         data_handler.save()
         self.output_handler("Reached the target amount of people. Scan complete.")
         logging.log(logging.INFO, "Reached the target amount of people. Scan complete.")
+
+        # --- City Hall verification second pass ---
+        self._run_ch_verification_pass(data_handler, rok_ui.tap_positions)
+
         self.adb_client.kill_adb()  # make sure to clean up adb server
         self.state_callback("Scan finished")
         return

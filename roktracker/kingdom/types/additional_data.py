@@ -13,6 +13,9 @@ class AdditionalData(BaseModel):
     kills_ok: bool | str
     reconstruction_success: bool | str
     remaining_sec: float
+    ch_verification_mode: bool = False
+    ch_current_governor: int = 0
+    ch_total_governors: int = 0
     current_time: datetime.datetime = datetime.datetime.now().astimezone()
 
     def eta(self) -> str:

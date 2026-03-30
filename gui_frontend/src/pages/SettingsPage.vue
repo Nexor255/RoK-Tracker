@@ -80,24 +80,47 @@
           />
         </div>
 
-        <div class="grid grid-cols-2 gap-4 mt-2">
-          <div class="flex flex-col gap-3 p-3 border rounded-md bg-muted/5">
-             <div class="flex items-center gap-2">
-                <Switch
-                  :checked="configStore.config.scan.validate_power"
-                  @update:checked="configStore.config.scan.validate_power = $event"
-                  label="Validate Power"
-                />
-             </div>
-             <Input 
-                v-model.number="configStore.config.scan.power_threshold" 
-                type="number"
-                label="Power Threshold" 
-                :disabled="!configStore.config.scan.validate_power"
-             />
-          </div>
-          <!-- Leaving empty slot where City Hall config would go to match the image spacing visually if desired, though since user asked to ignore it, we leave this space blank or remove the 2-col aspect. Let's keep it 2-col for aesthetic balance. -->
-          <div></div> 
+        <div class="flex flex-col gap-3 p-3 border rounded-md bg-muted/5 mt-2">
+           <Switch
+             :checked="configStore.config.scan.validate_power"
+             @update:checked="configStore.config.scan.validate_power = $event"
+             label="Validate Power"
+           />
+           <Input 
+              v-model.number="configStore.config.scan.power_threshold" 
+              type="number"
+              label="Power Threshold" 
+              :disabled="!configStore.config.scan.validate_power"
+           />
+        </div>
+      </CardContent>
+    </Card>
+
+    <!-- City Hall Verification -->
+    <Card>
+      <CardHeader class="pb-3">
+        <CardTitle>City Hall Verification</CardTitle>
+        <CardDescription>Verify governor City Hall levels after the main scan completes.</CardDescription>
+      </CardHeader>
+      <CardContent class="flex flex-col gap-4">
+        <Switch
+          :checked="configStore.config.scan.check_cityhall"
+          @update:checked="configStore.config.scan.check_cityhall = $event"
+          label="Enable CH Verification"
+        />
+        <div class="grid grid-cols-2 gap-4">
+          <Input
+            v-model.number="configStore.config.scan.ch_auto_assign_power"
+            type="number"
+            label="Auto-Assign Power Threshold"
+            :disabled="!configStore.config.scan.check_cityhall"
+          />
+          <Input
+            v-model.number="configStore.config.scan.min_ch_level"
+            type="number"
+            label="Minimum CH Level"
+            :disabled="!configStore.config.scan.check_cityhall"
+          />
         </div>
       </CardContent>
     </Card>

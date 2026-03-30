@@ -44,8 +44,17 @@ class PandasHandler:
                 "Rss Assistance": GovernorData.intify_value(gov_data.rss_assistance),
                 "Helps": GovernorData.intify_value(gov_data.helps),
                 "Alliance": gov_data.alliance.rstrip(),
+                "City Hall Level": gov_data.city_hall_level,
             }
         )
+
+    def update_governor(self, gov_data: GovernorData) -> None:
+        """Update an existing governor's data (used for CH level updates)."""
+        gov_id = GovernorData.intify_value(gov_data.id)
+        for entry in self.data_list:
+            if entry["ID"] == gov_id:
+                entry["City Hall Level"] = gov_data.city_hall_level
+                return
 
     def is_duplicate(self, gov_id: int) -> bool:
         if len(self.data_list) == 0:
@@ -59,6 +68,9 @@ class PandasHandler:
         frame = pd.DataFrame(self.data_list)
         # Drop cols that contain skipped values
         frame = frame.loc[:, ~(frame == -2).any()]
+        # Drop CH level column if all values are 0 (not used)
+        if "City Hall Level" in frame.columns and (frame["City Hall Level"] == 0).all():
+            frame = frame.drop(columns=["City Hall Level"])
 
         if self.formats.csv:
             frame.to_csv(self.path / (self.name + ".csv"), index=False)
@@ -76,3 +88,4 @@ class PandasHandler:
             frame.to_excel(
                 self.path / (self.name + ".xlsx"), index=False, sheet_name=self.title
             )
+
