@@ -631,6 +631,7 @@ yarn-error.log*
 # local .env files
 .env.local*
 
+!/scripts/
 
 TOP*
 NEXT*
