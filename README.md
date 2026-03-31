@@ -33,7 +33,7 @@ Originally based on the tool by [nikolakis1919](https://github.com/nikolakis1919
 
 ---
 
-## 🚀 What's New in v1.0.0
+## 🚀 What's in v1.0.0
 
 - **Tauri v2 desktop app** — replaced PyWebView + Bottle with a native Tauri shell for faster startup and smaller bundle
 - **Modern UI** — rebuilt with Vue 3, shadcn-vue, and Tailwind CSS (dark theme, responsive layout)
@@ -297,12 +297,12 @@ The installer will be created at:
 └─────────────────────────────────────┘
 ```
 
-| Component          | Technology                         | Purpose                           |
-| ------------------ | ---------------------------------- | --------------------------------- |
-| **Desktop shell**  | Tauri v2 (Rust)                    | Native window, IPC, bundling      |
-| **Frontend**       | Vue 3, shadcn-vue, Tailwind CSS    | UI (pages, components, styling)   |
-| **Backend bridge** | Rust (`commands.rs`, `sidecar.rs`) | Routes commands to Python sidecar |
-| **Scanner engine** | Python (Nuitka-compiled)           | OCR, ADB, data processing         |
+| Component          | Technology                         | Purpose                                 |
+| ------------------ | ---------------------------------- | --------------------------------------- |
+| **Desktop shell**  | Tauri v2 (Rust)                    | Native window, IPC, bundling            |
+| **Frontend**       | Vue 3, shadcn-vue, Tailwind CSS    | UI (pages, components, styling)         |
+| **Backend bridge** | Rust (`commands.rs`, `sidecar.rs`) | Routes commands to Python sidecar       |
+| **Scanner engine** | Python (Nuitka-compiled)           | OCR, ADB, data processing               |
 | **Auto-updater**   | Tauri Updater Plugin               | Checks GitHub Releases for new versions |
 
 ---

@@ -325,6 +325,7 @@ def cmd_load_presets(args):
 def cmd_save_config(args):
     config = FullConfig.model_validate(args["config"])
     save_config(config)
+    logger.info("Configuration saved successfully")
     emit_event("config_saved")
 
 

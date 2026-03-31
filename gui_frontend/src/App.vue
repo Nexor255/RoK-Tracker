@@ -119,7 +119,7 @@ import {
   AlertDialogHeader,
   AlertDialogTitle,
 } from '@/components/ui/alert-dialog'
-import { Toaster } from '@/components/ui/toast'
+import { Toaster, toast } from '@/components/ui/toast'
 import UpdateNotifier from '@/components/UpdateNotifier.vue'
 import { Radar, ScanLine, Calculator, Settings } from 'lucide-vue-next'
 import { onSidecarEvent } from '@/lib/tauriClient'
@@ -228,7 +228,11 @@ const unlisteners: Array<() => void> = []
 async function init() {
   unlisteners.push(await onSidecarEvent('config_loaded', (data) => {
     const parsed = FullConfigSchema.safeParse(data)
-    if (parsed.success) configStore.config = parsed.data
+    if (parsed.success) {
+      configStore.config = parsed.data
+    } else {
+      console.warn('Failed to parse loaded config:', parsed.error)
+    }
   }))
 
   unlisteners.push(await onSidecarEvent('presets_loaded', (data) => {
@@ -263,6 +267,16 @@ async function init() {
 
   unlisteners.push(await onSidecarEvent('batch_scan_finished', (data) => {
     handleBatchScanFinished(typeof data === 'string' ? data : JSON.stringify(data))
+  }))
+
+  // Global error handler for sidecar errors
+  unlisteners.push(await onSidecarEvent('error', (data) => {
+    console.error('Sidecar error:', data)
+    toast({
+      title: 'Backend Error',
+      description: String(data),
+      variant: 'destructive',
+    })
   }))
 
   // Load config and presets via sidecar
