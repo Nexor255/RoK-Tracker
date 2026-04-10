@@ -61,7 +61,8 @@ jobs:
 
       # ── Build Tauri installer ─────────────────────────────────
       - name: Build Tauri app
-        run: pnpm dlx @tauri-apps/cli build
+        working-directory: gui_frontend
+        run: npx tauri build
 
       - name: Summarize build
         shell: bash
