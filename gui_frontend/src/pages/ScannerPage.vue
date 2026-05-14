@@ -4,26 +4,30 @@
       <TabsList class="w-full justify-start rounded-none border-b bg-transparent p-0">
         <TabsTrigger
           value="kingdom"
-          class="rounded-none border-b-2 border-transparent transition-colors duration-200 hover:border-muted-foreground/30 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+          class="gap-1.5 rounded-none border-b-2 border-transparent transition-colors duration-200 hover:border-muted-foreground/30 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
         >
+          <Crown class="h-4 w-4" />
           Kingdom
         </TabsTrigger>
         <TabsTrigger
           value="seed"
-          class="rounded-none border-b-2 border-transparent transition-colors duration-200 hover:border-muted-foreground/30 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+          class="gap-1.5 rounded-none border-b-2 border-transparent transition-colors duration-200 hover:border-muted-foreground/30 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
         >
+          <Sprout class="h-4 w-4" />
           Seed
         </TabsTrigger>
         <TabsTrigger
           value="honor"
-          class="rounded-none border-b-2 border-transparent transition-colors duration-200 hover:border-muted-foreground/30 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+          class="gap-1.5 rounded-none border-b-2 border-transparent transition-colors duration-200 hover:border-muted-foreground/30 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
         >
+          <Award class="h-4 w-4" />
           Honor
         </TabsTrigger>
         <TabsTrigger
           value="alliance"
-          class="rounded-none border-b-2 border-transparent transition-colors duration-200 hover:border-muted-foreground/30 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
+          class="gap-1.5 rounded-none border-b-2 border-transparent transition-colors duration-200 hover:border-muted-foreground/30 data-[state=active]:border-primary data-[state=active]:bg-transparent data-[state=active]:shadow-none"
         >
+          <Shield class="h-4 w-4" />
           Alliance
         </TabsTrigger>
       </TabsList>
@@ -47,6 +51,7 @@
 <script setup lang="ts">
 import { ref } from 'vue'
 import { Tabs, TabsList, TabsTrigger, TabsContent } from '@/components/ui/tabs'
+import { Crown, Sprout, Award, Shield } from 'lucide-vue-next'
 import KingdomScanner from '@/components/KingdomScanner.vue'
 import BatchScanner from '@/components/BatchScanner.vue'
 

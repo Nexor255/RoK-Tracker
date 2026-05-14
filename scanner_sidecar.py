@@ -424,6 +424,61 @@ def cmd_confirm_batch(args):
 
 
 # ---------------------------------------------------------------------------
+# Scan History commands
+# ---------------------------------------------------------------------------
+from roktracker.utils.scan_history import (
+    list_all_scans,
+    delete_scan_file,
+    get_scan_folder,
+    get_scan_detail,
+    compare_scans,
+)
+
+
+@command("ListScanHistory")
+def cmd_list_scan_history(args):
+    history = list_all_scans()
+    emit_event("scan_history_list", history)
+
+
+@command("GetScanDetail")
+def cmd_get_scan_detail(args):
+    path = args["path"]
+    page = args.get("page", 1)
+    page_size = args.get("page_size", 50)
+    detail = get_scan_detail(path, page=page, page_size=page_size)
+    emit_event("scan_detail", detail)
+
+
+@command("CompareScanFiles")
+def cmd_compare_scans(args):
+    path_a = args["path_a"]
+    path_b = args["path_b"]
+    result = compare_scans(path_a, path_b)
+    emit_event("scan_compare_result", result)
+
+
+@command("DeleteScanFile")
+def cmd_delete_scan_file(args):
+    path = args["path"]
+    success = delete_scan_file(path)
+    if success:
+        emit_event("scan_file_deleted", path)
+    else:
+        emit_event("error", f"Failed to delete scan file: {path}")
+
+
+@command("GetScanFolder")
+def cmd_get_scan_folder(args):
+    scan_type = args["scan_type"]
+    folder = get_scan_folder(scan_type)
+    if folder:
+        emit_event("scan_folder_path", folder)
+    else:
+        emit_event("error", f"Unknown scan type: {scan_type}")
+
+
+# ---------------------------------------------------------------------------
 # Main loop — read JSON commands from stdin line by line
 # ---------------------------------------------------------------------------
 def main():

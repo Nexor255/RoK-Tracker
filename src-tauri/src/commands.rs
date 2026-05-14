@@ -102,3 +102,62 @@ pub fn confirm_batch(
         Some(json!({ "confirmed": confirmed, "batch_type": batch_type })),
     )
 }
+
+// --- Scan History ---
+
+#[tauri::command]
+pub fn list_scan_history(sidecar: State<'_, SidecarManager>) -> Result<(), String> {
+    send(&sidecar, "ListScanHistory", None)
+}
+
+#[tauri::command]
+pub fn get_scan_detail(
+    sidecar: State<'_, SidecarManager>,
+    path: String,
+    page: Option<u32>,
+    page_size: Option<u32>,
+) -> Result<(), String> {
+    send(
+        &sidecar,
+        "GetScanDetail",
+        Some(json!({
+            "path": path,
+            "page": page.unwrap_or(1),
+            "page_size": page_size.unwrap_or(50),
+        })),
+    )
+}
+
+#[tauri::command]
+pub fn compare_scans(
+    sidecar: State<'_, SidecarManager>,
+    path_a: String,
+    path_b: String,
+) -> Result<(), String> {
+    send(
+        &sidecar,
+        "CompareScanFiles",
+        Some(json!({ "path_a": path_a, "path_b": path_b })),
+    )
+}
+
+#[tauri::command]
+pub fn delete_scan_file(sidecar: State<'_, SidecarManager>, path: String) -> Result<(), String> {
+    send(
+        &sidecar,
+        "DeleteScanFile",
+        Some(json!({ "path": path })),
+    )
+}
+
+#[tauri::command]
+pub fn open_scan_folder(app: tauri::AppHandle, path: String) -> Result<(), String> {
+    use tauri_plugin_opener::OpenerExt;
+    let p = std::path::Path::new(&path);
+    // If the path is a file, reveal it in its parent directory
+    // If it's a directory, reveal the directory itself
+    app.opener()
+        .reveal_item_in_dir(p)
+        .map_err(|e| e.to_string())
+}
+

@@ -126,7 +126,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, markRaw, onMounted, onUnmounted } from 'vue'
+import { ref, markRaw, onMounted, onUnmounted, onErrorCaptured } from 'vue'
 import { useDark, useToggle } from '@vueuse/core'
 import { useConfigStore } from './stores/config-store'
 import { FullConfigSchema } from './schema/FullConfig'
@@ -149,7 +149,7 @@ import {
 import { Toaster, toast } from '@/components/ui/toast'
 import UpdateNotifier from '@/components/UpdateNotifier.vue'
 import ErrorNotifier from '@/components/ErrorNotifier.vue'
-import { Radar, ScanLine, Calculator, Settings } from 'lucide-vue-next'
+import { Radar, ScanLine, Calculator, History, Settings } from 'lucide-vue-next'
 import { onSidecarEvent } from '@/lib/tauriClient'
 import * as ipc from '@/lib/tauriClient'
 import { useErrorStore } from '@/stores/error-store'
@@ -164,9 +164,16 @@ const errorStore = useErrorStore()
 const darkMode = useDark()
 const toggleDarkMode = useToggle(darkMode)
 
+// Global error catcher — log child component errors to console
+onErrorCaptured((err, instance, info) => {
+  console.error('[App] Component error:', err, '\nInfo:', info, '\nComponent:', instance?.$options?.name || instance)
+  return false // don't propagate, let the component handle it
+})
+
 const navItems = [
   { to: '/scanner', label: 'Scanners', icon: markRaw(ScanLine) },
   { to: '/calculator', label: 'Calculators', icon: markRaw(Calculator) },
+  { to: '/history', label: 'History', icon: markRaw(History) },
   { to: '/settings', label: 'Settings', icon: markRaw(Settings) },
 ]
 

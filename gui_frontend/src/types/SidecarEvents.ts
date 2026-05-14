@@ -11,6 +11,7 @@ import type { KingdomGovernorData } from '@/schema/KingdomGovernorData'
 import type { KingdomAdditionalData } from '@/schema/KingdomAdditionalData'
 import type { BatchGovernorData } from '@/schema/BatchGovernorData'
 import type { BatchAdditionalData } from '@/schema/BatchAdditionalData'
+import type { ScanHistoryEntry, ScanDetailPayload, ScanComparePayload } from '@/types/ScanHistory'
 
 /**
  * Map of sidecar event names to their payload types.
@@ -56,6 +57,13 @@ export interface SidecarEventMap {
     type: string
   }
   batch_scan_finished: string | Record<string, unknown>
+
+  // Scan History
+  scan_history_list: ScanHistoryEntry[]
+  scan_detail: ScanDetailPayload
+  scan_compare_result: ScanComparePayload
+  scan_file_deleted: string
+  scan_folder_path: string
 
   // Errors
   error: string

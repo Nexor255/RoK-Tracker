@@ -7,6 +7,7 @@ const routes: RouteRecordRaw[] = [
   },
   { path: '/scanner', component: () => import('@/pages/ScannerPage.vue') },
   { path: '/calculator', component: () => import('@/pages/CalculatorPage.vue') },
+  { path: '/history', component: () => import('@/pages/HistoryPage.vue') },
   { path: '/settings', component: () => import('@/pages/SettingsPage.vue') },
   {
     path: '/:catchAll(.*)*',

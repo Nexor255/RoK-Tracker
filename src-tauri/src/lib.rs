@@ -9,6 +9,7 @@ pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_shell::init())
         .plugin(tauri_plugin_process::init())
+        .plugin(tauri_plugin_opener::init())
         .manage(SidecarManager::new())
         .setup(|app| {
             #[cfg(desktop)]
@@ -51,6 +52,11 @@ pub fn run() {
             commands::start_batch_scan,
             commands::stop_batch_scan,
             commands::confirm_batch,
+            commands::list_scan_history,
+            commands::get_scan_detail,
+            commands::compare_scans,
+            commands::delete_scan_file,
+            commands::open_scan_folder,
         ])
         .run(tauri::generate_context!())
         .expect("error while running tauri application");
