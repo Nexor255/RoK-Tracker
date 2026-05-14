@@ -2,8 +2,8 @@
   <div class="relative flex h-screen flex-col bg-background">
     <!-- Ambient background glow for depth -->
     <div class="pointer-events-none absolute inset-0 overflow-hidden">
-      <div class="absolute -top-[20%] -left-[10%] h-[60%] w-[60%] rounded-full bg-primary/10 blur-[120px] transition-all duration-1000 ease-in-out" />
-      <div class="absolute top-[40%] -right-[10%] h-[60%] w-[60%] rounded-full bg-blue-600/10 blur-[120px] transition-all duration-1000 ease-in-out" />
+      <div class="absolute -top-[20%] -left-[10%] h-[60%] w-[60%] rounded-full bg-primary/20 dark:bg-primary/10 blur-[120px] transition-all duration-1000 ease-in-out" />
+      <div class="absolute top-[40%] -right-[10%] h-[60%] w-[60%] rounded-full bg-blue-500/15 dark:bg-blue-600/10 blur-[120px] transition-all duration-1000 ease-in-out" />
     </div>
 
     <div class="z-10 flex flex-1 flex-col overflow-hidden">
@@ -52,7 +52,7 @@
       <!-- Main content with sidebar -->
       <div class="flex flex-1 overflow-hidden">
         <!-- Sidebar Navigation -->
-        <nav class="flex w-[120px] flex-col items-center gap-1 border-r bg-muted/20 backdrop-blur-md p-2 overflow-y-auto scrollbar-hidden">
+        <nav class="flex w-[120px] flex-col items-center gap-1 border-r bg-sidebar-background dark:bg-muted/20 backdrop-blur-md p-2 overflow-y-auto scrollbar-hidden">
         <router-link
           v-for="item in navItems"
           :key="item.to"

@@ -5,25 +5,25 @@
  * Purple / blue palette
  */
 :root {
-  --background: oklch(0.99 0.003 285);
-  --foreground: oklch(0.15 0.015 285);
-  --card: oklch(0.995 0.002 285);
-  --card-foreground: oklch(0.15 0.015 285);
-  --popover: oklch(0.995 0.002 285);
-  --popover-foreground: oklch(0.15 0.015 285);
-  --primary: oklch(0.55 0.2 275);
+  --background: oklch(0.96 0.008 270);
+  --foreground: oklch(0.12 0.02 280);
+  --card: oklch(0.995 0.003 275);
+  --card-foreground: oklch(0.12 0.02 280);
+  --popover: oklch(0.995 0.003 275);
+  --popover-foreground: oklch(0.12 0.02 280);
+  --primary: oklch(0.49 0.22 275);
   --primary-foreground: oklch(0.98 0.005 285);
-  --secondary: oklch(0.96 0.012 280);
-  --secondary-foreground: oklch(0.22 0.02 285);
-  --muted: oklch(0.96 0.008 280);
-  --muted-foreground: oklch(0.50 0.02 285);
-  --accent: oklch(0.94 0.025 275);
-  --accent-foreground: oklch(0.22 0.02 285);
+  --secondary: oklch(0.93 0.020 275);
+  --secondary-foreground: oklch(0.18 0.025 280);
+  --muted: oklch(0.88 0.022 275);
+  --muted-foreground: oklch(0.42 0.03 280);
+  --accent: oklch(0.91 0.032 275);
+  --accent-foreground: oklch(0.18 0.025 280);
   --destructive: oklch(0.577 0.245 27.325);
   --destructive-foreground: oklch(0.577 0.245 27.325);
-  --border: oklch(0.91 0.012 280);
-  --input: oklch(0.91 0.012 280);
-  --ring: oklch(0.55 0.2 275);
+  --border: oklch(0.84 0.024 275);
+  --input: oklch(0.86 0.020 275);
+  --ring: oklch(0.49 0.22 275);
   --radius: 0.5rem;
 
   --chart-1: oklch(0.55 0.2 275);
@@ -32,14 +32,14 @@
   --chart-4: oklch(0.828 0.189 84.429);
   --chart-5: oklch(0.769 0.188 70.08);
 
-  --sidebar-background: oklch(0.98 0.006 280);
-  --sidebar-foreground: oklch(0.50 0.02 285);
-  --sidebar-primary: oklch(0.22 0.02 285);
+  --sidebar-background: oklch(0.945 0.015 275);
+  --sidebar-foreground: oklch(0.42 0.03 280);
+  --sidebar-primary: oklch(0.18 0.025 280);
   --sidebar-primary-foreground: oklch(0.98 0.005 285);
-  --sidebar-accent: oklch(0.94 0.025 275);
-  --sidebar-accent-foreground: oklch(0.22 0.02 285);
-  --sidebar-border: oklch(0.91 0.012 280);
-  --sidebar-ring: oklch(0.55 0.2 275);
+  --sidebar-accent: oklch(0.90 0.035 275);
+  --sidebar-accent-foreground: oklch(0.18 0.025 280);
+  --sidebar-border: oklch(0.84 0.024 275);
+  --sidebar-ring: oklch(0.49 0.22 275);
 }
 
 .dark {
@@ -136,6 +136,37 @@
 * {
   -ms-overflow-style: none;
   scrollbar-width: none;
+}
+
+/* ── Light mode depth & polish ───────────────────────── */
+
+/* Card elevation — visible shadow instead of blending into background */
+:root:not(.dark) [class*="rounded-xl"][class*="border"][class*="bg-card"] {
+  box-shadow:
+    0 1px 3px oklch(0.30 0.03 275 / 0.10),
+    0 4px 12px oklch(0.30 0.03 275 / 0.06);
+}
+
+/* Input fields — subtle background fill for definition */
+:root:not(.dark) input[class*="border-input"] {
+  background-color: oklch(0.99 0.002 275);
+  box-shadow: inset 0 1px 2px oklch(0.30 0.03 275 / 0.06);
+}
+
+/* Sidebar — stronger visual separation */
+:root:not(.dark) nav[class*="border-r"] {
+  box-shadow: 1px 0 8px oklch(0.30 0.03 275 / 0.06);
+}
+
+/* Header — subtle bottom shadow for depth in light mode */
+:root:not(.dark) header[class*="border-b"] {
+  box-shadow: 0 2px 12px oklch(0.30 0.03 275 / 0.12);
+}
+
+/* Separator — more visible in light mode */
+:root:not(.dark) [role="separator"],
+:root:not(.dark) [data-orientation] {
+  background-color: oklch(from var(--border) l c h / 0.65);
 }
 
 /* Theme toggle animation (migrated from app.scss) */

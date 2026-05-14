@@ -151,7 +151,7 @@
 
         <!-- Toggles grid -->
         <div
-          class="grid grid-cols-2 gap-x-4 gap-y-3 rounded-md bg-muted/10 backdrop-blur-md p-3 border border-border/50 shadow-sm"
+          class="grid grid-cols-2 gap-x-4 gap-y-3 rounded-md bg-muted/50 dark:bg-muted/10 backdrop-blur-md p-3 border border-border/60 dark:border-border/50 shadow-sm"
         >
           <Switch
             :checked="configStore.config.scan.resume"
@@ -207,7 +207,7 @@
 
         <!-- City Hall Verification -->
         <div
-          class="p-3 border border-border/50 rounded-md bg-muted/10 backdrop-blur-md mt-1 shadow-sm transition-all duration-200"
+          class="p-3 border border-border/60 dark:border-border/50 rounded-md bg-muted/50 dark:bg-muted/10 backdrop-blur-md mt-1 shadow-sm transition-all duration-200"
           :class="{ 'opacity-60': !configStore.config.scan.check_cityhall }"
         >
           <div class="flex items-center justify-between">

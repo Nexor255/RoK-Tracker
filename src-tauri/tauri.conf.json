@@ -27,7 +27,7 @@
   "bundle": {
     "active": true,
     "targets": "all",
-    "createUpdaterArtifacts": true,
+    "createUpdaterArtifacts": false,
     "icon": ["icons/icon.ico"],
     "externalBin": ["binaries/scanner_sidecar"],
     "resources": {

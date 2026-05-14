@@ -8,7 +8,7 @@
         </AlertDialogTitle>
         <AlertDialogDescription class="space-y-4">
           <!-- Suggestion Box -->
-          <div class="rounded-md bg-muted/20 backdrop-blur-md border border-border/50 p-3 text-sm text-foreground shadow-sm">
+          <div class="rounded-md bg-muted/50 dark:bg-muted/20 backdrop-blur-md border border-border/60 dark:border-border/50 p-3 text-sm text-foreground shadow-sm">
             <p class="font-medium mb-1">Suggestion</p>
             <p>{{ errorStore.errorSuggestion }}</p>
           </div>

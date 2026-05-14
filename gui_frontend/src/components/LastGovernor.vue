@@ -34,7 +34,7 @@
       </div>
 
       <!-- Kills & Economy — unified stats box -->
-      <div class="mt-3 rounded-lg bg-muted/25 p-3 border border-border/40">
+      <div class="mt-3 rounded-lg bg-muted/50 dark:bg-muted/25 p-3 border border-border/60 dark:border-border/40">
         <div class="grid grid-cols-2 gap-x-5 gap-y-1 text-sm">
           <TooltipProvider v-for="stat in killStats" :key="stat.label">
             <div class="flex items-center justify-between gap-2">
@@ -93,12 +93,33 @@
       />
 
       <!-- Scan speed — inline row with dot separators, slightly emphasized -->
-      <div class="flex w-full items-center justify-center rounded-md bg-muted/20 py-1.5 text-xs tabular-nums mt-1">
-        <span class="text-primary font-medium">{{ kingdomStore.status.avg_time_per_governor > 0 ? kingdomStore.status.avg_time_per_governor.toFixed(1) + 's/gov' : '—' }}</span>
+      <div class="flex w-full items-center justify-center rounded-md bg-muted/40 dark:bg-muted/20 py-1.5 text-xs tabular-nums mt-1">
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <span class="text-primary font-medium cursor-help">{{ kingdomStore.status.avg_time_per_governor > 0 ? kingdomStore.status.avg_time_per_governor.toFixed(1) + 's/gov' : '—' }}</span>
+            </TooltipTrigger>
+            <TooltipContent>Average time to scan each governor</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <span class="text-muted-foreground/40 mx-2">•</span>
-        <span class="text-primary font-medium">{{ kingdomStore.status.scan_speed_per_hour > 0 ? Math.round(kingdomStore.status.scan_speed_per_hour) + '/hr' : '—' }}</span>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <span class="text-primary font-medium cursor-help">{{ kingdomStore.status.scan_speed_per_hour > 0 ? Math.round(kingdomStore.status.scan_speed_per_hour) + '/hr' : '—' }}</span>
+            </TooltipTrigger>
+            <TooltipContent>Governors scanned per hour</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
         <span class="text-muted-foreground/40 mx-2">•</span>
-        <span class="text-primary font-medium">{{ kingdomStore.status.elapsed_sec > 0 ? formatDuration(kingdomStore.status.elapsed_sec) : '—' }}</span>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger as-child>
+              <span class="text-primary font-medium cursor-help">{{ kingdomStore.status.elapsed_sec > 0 ? formatDuration(kingdomStore.status.elapsed_sec) : '—' }}</span>
+            </TooltipTrigger>
+            <TooltipContent>Total elapsed scan time</TooltipContent>
+          </Tooltip>
+        </TooltipProvider>
       </div>
 
       <!-- Time info row — short labels to avoid wrapping -->

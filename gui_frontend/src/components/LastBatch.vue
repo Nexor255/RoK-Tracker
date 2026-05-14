@@ -9,7 +9,7 @@
 
     <CardContent class="flex-1 overflow-auto py-3 px-4">
       <!-- Governors — boxed like Kingdom kills -->
-      <div class="rounded-lg bg-muted/25 p-3 border border-border/40">
+      <div class="rounded-lg bg-muted/50 dark:bg-muted/25 p-3 border border-border/60 dark:border-border/40">
         <div class="space-y-1 text-sm">
           <div v-for="gov in batchData" :key="gov.img_path" class="flex items-center justify-between gap-2">
             <span class="truncate">{{ gov.name }}</span>

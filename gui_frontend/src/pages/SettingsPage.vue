@@ -57,7 +57,7 @@
           label="Default People to Scan" 
         />
         
-        <div class="grid grid-cols-2 gap-x-4 gap-y-3 rounded-md bg-muted/10 backdrop-blur-md p-4 border border-border/50 mt-2 shadow-sm">
+        <div class="grid grid-cols-2 gap-x-4 gap-y-3 rounded-md bg-muted/50 dark:bg-muted/10 backdrop-blur-md p-4 border border-border/60 dark:border-border/50 mt-2 shadow-sm">
           <Switch
             :checked="configStore.config.scan.advanced_scroll"
             @update:checked="configStore.config.scan.advanced_scroll = $event"
@@ -81,7 +81,7 @@
           />
         </div>
 
-        <div class="flex flex-col gap-3 p-3 border border-border/50 rounded-md bg-muted/10 backdrop-blur-md mt-2 shadow-sm">
+        <div class="flex flex-col gap-3 p-3 border border-border/60 dark:border-border/50 rounded-md bg-muted/50 dark:bg-muted/10 backdrop-blur-md mt-2 shadow-sm">
            <Switch
              :checked="configStore.config.scan.validate_power"
              @update:checked="configStore.config.scan.validate_power = $event"
