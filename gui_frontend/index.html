@@ -7,6 +7,14 @@
     <title>RoK Tracker Suite</title>
   </head>
   <body>
+    <script>
+      (function () {
+        const stored = localStorage.getItem('vueuse-color-scheme');
+        const prefersDark = window.matchMedia('(prefers-color-scheme: dark)').matches;
+        if (stored === 'dark' || (!stored && prefersDark))
+          document.documentElement.classList.add('dark');
+      })();
+    </script>
     <div id="app"></div>
     <script type="module" src="/src/main.ts"></script>
   </body>

@@ -3,17 +3,17 @@
     <!-- Ambient background glow for depth -->
     <div class="pointer-events-none absolute inset-0 overflow-hidden">
       <div
-        class="absolute -top-[20%] -left-[10%] h-[60%] w-[60%] rounded-full bg-primary/20 dark:bg-primary/10 blur-[120px] transition-all duration-1000 ease-in-out"
+        class="absolute -top-[20%] -left-[10%] h-[60%] w-[60%] rounded-full bg-primary/15 dark:bg-primary/10 blur-[120px] transition-all duration-1000 ease-in-out"
       />
       <div
-        class="absolute top-[40%] -right-[10%] h-[60%] w-[60%] rounded-full bg-blue-500/15 dark:bg-blue-600/10 blur-[120px] transition-all duration-1000 ease-in-out"
+        class="absolute top-[40%] -right-[10%] h-[60%] w-[60%] rounded-full bg-chart-2/20 dark:bg-chart-2/10 blur-[120px] transition-all duration-1000 ease-in-out"
       />
     </div>
 
     <div class="z-10 flex flex-1 flex-col overflow-hidden">
       <!-- Header -->
       <header
-        class="sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-primary/90 backdrop-blur-md px-6 text-primary-foreground shadow-sm"
+        class="app-header sticky top-0 z-40 flex h-14 items-center gap-4 border-b bg-primary/90 backdrop-blur-md px-6 text-primary-foreground shadow-sm"
       >
         <div class="flex items-center gap-2">
           <Radar class="h-6 w-6" />
@@ -59,15 +59,15 @@
       <div class="flex flex-1 overflow-hidden">
         <!-- Sidebar Navigation -->
         <nav
-          class="flex w-[120px] flex-col items-center gap-1 border-r bg-sidebar-background dark:bg-muted/20 backdrop-blur-md p-2 overflow-y-auto scrollbar-hidden"
+          class="app-sidebar flex w-[120px] flex-col items-center gap-1 border-r bg-sidebar-background backdrop-blur-md p-2 overflow-y-auto scrollbar-hidden"
         >
           <template v-for="item in navItems" :key="item.to">
             <!-- Coming-soon items render as a disabled div -->
             <div
               v-if="item.comingSoon"
-              class="relative flex w-full flex-col items-center justify-center gap-1 rounded-md px-3 py-2.5 text-xs font-medium text-muted-foreground/50 cursor-not-allowed select-none"
+              class="relative flex w-full flex-col items-center justify-center gap-1 rounded-md px-3 py-2.5 text-xs font-medium text-muted-foreground/70 cursor-not-allowed select-none"
             >
-              <component :is="item.icon" class="h-5 w-5 opacity-40" />
+              <component :is="item.icon" class="h-5 w-5 opacity-60" />
               {{ item.label }}
               <span
                 class="absolute -top-1 -right-1 rounded-full bg-primary/80 px-1.5 py-[1px] text-[9px] font-semibold leading-tight text-primary-foreground shadow-sm"

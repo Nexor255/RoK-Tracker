@@ -13,7 +13,7 @@ const props = withDefaults(defineProps<SeparatorProps & { class?: HTMLAttributes
   <Separator
     v-bind="props"
     :class="cn(
-      'shrink-0 bg-border',
+      'shrink-0 bg-border/65 dark:bg-border',
       orientation === 'horizontal' ? 'h-px w-full' : 'h-full w-px',
       props.class,
     )"

@@ -7,9 +7,9 @@ const { toasts, dismiss } = useToast()
 function variantClasses(variant?: string) {
   switch (variant) {
     case 'success':
-      return 'border-emerald-500/30 bg-emerald-950/90 text-emerald-50'
+      return 'border-emerald-200 bg-emerald-50 text-emerald-900 dark:border-emerald-500/30 dark:bg-emerald-950/90 dark:text-emerald-50'
     case 'destructive':
-      return 'border-red-500/30 bg-red-950/90 text-red-50'
+      return 'border-red-200 bg-red-50 text-red-900 dark:border-red-500/30 dark:bg-red-950/90 dark:text-red-50'
     default:
       return 'border-border bg-background text-foreground'
   }
@@ -29,9 +29,9 @@ function getIcon(variant?: string) {
 function iconClasses(variant?: string) {
   switch (variant) {
     case 'success':
-      return 'text-emerald-400'
+      return 'text-emerald-600 dark:text-emerald-400'
     case 'destructive':
-      return 'text-red-400'
+      return 'text-red-600 dark:text-red-400'
     default:
       return 'text-muted-foreground'
   }
