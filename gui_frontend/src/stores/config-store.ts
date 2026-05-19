@@ -2,8 +2,11 @@ import { defineStore, acceptHMRUpdate } from 'pinia'
 import type { FullConfig } from 'src/schema/FullConfig'
 import type { ScanPreset } from 'src/schema/ScanPreset'
 import { ref } from 'vue'
+import { useStorage } from '@vueuse/core'
 
 export const useConfigStore = defineStore('configStore', () => {
+  const themeColor = useStorage('theme-hue', 275) // Default hue is 275
+
   const config = ref<FullConfig>({
     scan: {
       kingdom_name: '',
@@ -94,6 +97,7 @@ export const useConfigStore = defineStore('configStore', () => {
     configLoaded,
     availableScanPresets,
     selectedKingdomOptions,
+    themeColor,
   }
 })
 

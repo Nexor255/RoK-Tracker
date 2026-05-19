@@ -44,6 +44,60 @@
       </CardContent>
     </Card>
 
+    <!-- Appearance Settings -->
+    <Card>
+      <CardHeader class="pb-3">
+        <CardTitle>Appearance</CardTitle>
+        <CardDescription>Customize the look and feel of the application.</CardDescription>
+      </CardHeader>
+      <CardContent class="grid gap-4">
+        <div class="space-y-3">
+          <label class="text-sm font-medium leading-none flex items-center justify-between">
+            Theme Accent Color
+            <span class="text-xs font-mono text-muted-foreground bg-muted/50 px-2 py-0.5 rounded-md border">Hue: {{ configStore.themeColor }}</span>
+          </label>
+          
+          <!-- Hue Slider -->
+          <div class="relative pt-1 pb-2">
+            <input 
+              type="range" 
+              min="0" 
+              max="360" 
+              v-model.number="configStore.themeColor"
+              class="hue-slider w-full h-3 rounded-full appearance-none cursor-pointer border border-border/50 shadow-inner"
+              style="background: linear-gradient(to right, oklch(0.6 0.2 0), oklch(0.6 0.2 60), oklch(0.6 0.2 120), oklch(0.6 0.2 180), oklch(0.6 0.2 240), oklch(0.6 0.2 300), oklch(0.6 0.2 360));"
+            />
+            <div class="absolute -bottom-2 inset-x-0 pointer-events-none flex justify-between px-1.5">
+               <!-- Tick marks for the slider -->
+               <div v-for="i in 7" :key="i" class="w-[1px] h-1.5 bg-foreground/20"></div>
+            </div>
+          </div>
+
+          <!-- Color Swatches -->
+          <div class="flex flex-wrap gap-2.5 mt-2">
+            <button
+              v-for="preset in [
+                { hue: 27, label: 'Red' },
+                { hue: 50, label: 'Orange' },
+                { hue: 100, label: 'Yellow-Green' },
+                { hue: 150, label: 'Green' },
+                { hue: 200, label: 'Cyan' },
+                { hue: 250, label: 'Blue' },
+                { hue: 275, label: 'Purple' },
+                { hue: 330, label: 'Pink' }
+              ]"
+              :key="preset.hue"
+              @click="configStore.themeColor = preset.hue"
+              class="w-8 h-8 rounded-full border-2 transition-all hover:scale-110 active:scale-95 focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2 focus:ring-offset-background shadow-sm"
+              :class="configStore.themeColor === preset.hue ? 'border-foreground scale-110 ring-2 ring-ring ring-offset-2 ring-offset-background' : 'border-transparent'"
+              :title="preset.label"
+              :style="{ backgroundColor: `oklch(0.6 0.2 ${preset.hue})` }"
+            />
+          </div>
+        </div>
+      </CardContent>
+    </Card>
+
     <!-- Scan Settings -->
     <Card>
       <CardHeader class="pb-3">

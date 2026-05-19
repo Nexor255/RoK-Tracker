@@ -165,7 +165,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, markRaw, onMounted, onUnmounted, onErrorCaptured } from 'vue'
+import { ref, markRaw, onMounted, onUnmounted, onErrorCaptured, watchEffect } from 'vue'
 import { useDark, useToggle } from '@vueuse/core'
 import { useConfigStore } from './stores/config-store'
 import { FullConfigSchema } from './schema/FullConfig'
@@ -218,8 +218,8 @@ onErrorCaptured((err, instance, info) => {
 
 const navItems: Array<{ to: string; label: string; icon: ReturnType<typeof markRaw>; comingSoon?: boolean }> = [
   { to: '/scanner', label: 'Scanners', icon: markRaw(ScanLine) },
-  { to: '/calculator', label: 'Calculators', icon: markRaw(Calculator), comingSoon: true },
-  { to: '/history', label: 'History', icon: markRaw(History), comingSoon: true },
+  { to: '/calculator', label: 'Calculators', icon: markRaw(Calculator), comingSoon: false },
+  { to: '/history', label: 'History', icon: markRaw(History), comingSoon: false },
   { to: '/settings', label: 'Settings', icon: markRaw(Settings) },
 ]
 
@@ -454,6 +454,11 @@ async function init() {
 
 onMounted(() => {
   init()
+
+  // Apply dynamic theme color
+  watchEffect(() => {
+    document.documentElement.style.setProperty('--theme-hue', String(configStore.themeColor))
+  })
 })
 
 onUnmounted(() => {

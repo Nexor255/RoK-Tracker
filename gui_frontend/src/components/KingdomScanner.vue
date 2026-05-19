@@ -1,7 +1,7 @@
 <template>
-  <div class="grid grid-cols-1 gap-4 lg:grid-cols-12 min-h-0">
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-[repeat(24,minmax(0,1fr))] min-h-0">
     <!-- Left Column: Controls (Presets & Tree) -->
-    <Card class="flex flex-col gap-4 p-4 lg:col-span-2 min-h-0 overflow-y-auto">
+    <Card class="flex flex-col gap-4 p-4 lg:col-span-5 min-h-0 overflow-y-auto">
       <!-- Scan Preset -->
       <div class="space-y-1.5">
         <label class="text-sm font-medium">Scan Preset</label>
@@ -96,7 +96,7 @@
     </Card>
 
     <!-- Middle Column: Form Settings -->
-    <div class="flex flex-col gap-6 lg:col-span-6 min-h-0 overflow-y-auto pr-1">
+    <div class="flex flex-col gap-6 lg:col-span-11 min-h-0 overflow-y-auto pr-1">
       <div class="flex flex-col gap-6">
         <!-- General -->
         <div class="grid grid-cols-2 gap-4">
@@ -263,7 +263,7 @@
     </div>
 
     <!-- Right Column: Results & Status -->
-    <div class="flex flex-col gap-4 lg:col-span-4 min-h-0">
+    <div class="flex flex-col gap-4 lg:col-span-8 min-h-0">
       <div class="flex-1 flex flex-col gap-4 min-h-0">
         <!-- We use flex-1 on this div so the inner components can stretch or scroll if necessary. -->
         <LastGovernor class="flex-1" />
