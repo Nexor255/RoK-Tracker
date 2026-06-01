@@ -39,7 +39,7 @@ requests==2.32.3
 rich==13.9.4
 setuptools==75.8.0
 six==1.17.0
-tesserocr @ https://github.com/simonflueckiger/tesserocr-windows_build/releases/download/tesserocr-v2.8.0-tesseract-5.5.0/tesserocr-2.8.0-cp313-cp313-win_amd64.whl
+tesserocr @ https://github.com/simonflueckiger/tesserocr-windows_build/releases/download/tesserocr-v2.8.0-tesseract-5.5.0/tesserocr-2.8.0-cp312-cp312-win_amd64.whl
 typing_extensions==4.12.2
 tzdata==2024.2
 urllib3==2.3.0
