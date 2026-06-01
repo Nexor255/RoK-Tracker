@@ -66,12 +66,15 @@ def main():
         f"--output-filename=scanner_sidecar{ext}",
         "--remove-output",
         "--follow-imports",
-        # tesserocr's Cython extension imports cysignals at the C level,
-        # which Nuitka cannot trace statically — include it explicitly.
-        "--include-package=tesserocr.cysignals",
         "--include-package-data=tesserocr",
         SIDECAR_SCRIPT,
     ]
+
+    # tesserocr's Cython extension imports cysignals at the C level,
+    # which Nuitka cannot trace statically — include it explicitly.
+    # cysignals is Unix-only; the Windows wheel is built without it.
+    if platform.system() != "Windows":
+        cmd.insert(-1, "--include-package=tesserocr.cysignals")
 
     print(f"[bundle_sidecar] Running: {' '.join(cmd)}")
     result = subprocess.run(cmd, cwd=PROJECT_ROOT)
