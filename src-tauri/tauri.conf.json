@@ -27,7 +27,7 @@
   "bundle": {
     "active": true,
     "targets": ["nsis"],
-    "createUpdaterArtifacts": false,
+    "createUpdaterArtifacts": true,
     "icon": ["icons/icon.ico"],
     "externalBin": ["binaries/scanner_sidecar"],
     "resources": {
