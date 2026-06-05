@@ -1,0 +1,11 @@
+blank_issues_enabled: false
+contact_links:
+  - name: Ask a Question
+    url: https://github.com/Nexor255/RoK-Tracker/discussions/categories/q-a
+    about: Use Discussions for questions about setup, usage, or general help. Please don't open an issue for questions.
+  - name: Share an Idea
+    url: https://github.com/Nexor255/RoK-Tracker/discussions/categories/ideas
+    about: Have a rough idea that isn't a full feature request yet? Start a discussion first.
+  - name: Wiki
+    url: https://github.com/Nexor255/RoK-Tracker/wiki
+    about: Check the Wiki for installation guides, usage documentation, and troubleshooting before opening an issue.

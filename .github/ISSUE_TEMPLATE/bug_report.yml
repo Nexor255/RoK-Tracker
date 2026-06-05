@@ -1,0 +1,119 @@
+name: Bug Report
+description: Report a problem with RoK-Tracker
+title: "[Bug]: "
+labels: ["bug"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for taking the time to report a bug. Please fill out the sections below so the issue can be diagnosed quickly.
+
+  - type: textarea
+    id: description
+    attributes:
+      label: What happened?
+      description: A clear description of the bug.
+      placeholder: Describe the bug here...
+    validations:
+      required: true
+
+  - type: textarea
+    id: steps
+    attributes:
+      label: Steps to reproduce
+      description: List the exact steps to reproduce the problem.
+      placeholder: |
+        1. Open the app
+        2. Go to ...
+        3. Click on ...
+        4. See error
+    validations:
+      required: true
+
+  - type: textarea
+    id: expected
+    attributes:
+      label: Expected behavior
+      description: What did you expect to happen instead?
+      placeholder: Describe what should have happened...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: scanner
+    attributes:
+      label: Which scanner were you using?
+      description: Select the scanner type, or "N/A" if the issue is not related to scanning.
+      options:
+        - Kingdom Scanner
+        - Alliance Scanner
+        - Honor Scanner
+        - Seed Scanner
+        - N/A (not related to scanning)
+    validations:
+      required: true
+
+  - type: input
+    id: version
+    attributes:
+      label: RoK-Tracker version
+      description: The app version (visible in the Settings page).
+      placeholder: "e.g. 1.0.0"
+    validations:
+      required: true
+
+  - type: input
+    id: os
+    attributes:
+      label: Windows version
+      description: Your Windows version.
+      placeholder: "e.g. Windows 11 23H2"
+    validations:
+      required: true
+
+  - type: dropdown
+    id: emulator
+    attributes:
+      label: Emulator
+      options:
+        - Bluestacks 5
+        - LD Player
+        - Other
+    validations:
+      required: true
+
+  - type: input
+    id: emulator-version
+    attributes:
+      label: Emulator version
+      placeholder: "e.g. Bluestacks 5.21.110.1002"
+    validations:
+      required: false
+
+  - type: textarea
+    id: screenshots
+    attributes:
+      label: Screenshots or logs
+      description: |
+        Attach any relevant screenshots. If the issue involves the scanner, please attach your `sidecar.log` file from the app directory.
+      placeholder: Drag and drop images here, or paste log output...
+    validations:
+      required: false
+
+  - type: textarea
+    id: additional
+    attributes:
+      label: Additional context
+      description: Any other information that might help diagnose the issue.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Before submitting
+      options:
+        - label: I checked the [Troubleshooting](https://github.com/Nexor255/RoK-Tracker/wiki/Troubleshooting) page and my issue is not covered there.
+          required: true
+        - label: I searched existing [issues](https://github.com/Nexor255/RoK-Tracker/issues) and this has not been reported before.
+          required: true

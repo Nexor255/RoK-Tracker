@@ -1,0 +1,69 @@
+name: Feature Request
+description: Suggest a new feature or improvement for RoK-Tracker
+title: "[Feature]: "
+labels: ["enhancement"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Thank you for suggesting an improvement! Please describe your idea in detail so it can be evaluated.
+
+  - type: textarea
+    id: problem
+    attributes:
+      label: Is this related to a problem?
+      description: Describe the limitation or frustration that led to this idea.
+      placeholder: "I'm always frustrated when..."
+    validations:
+      required: false
+
+  - type: textarea
+    id: solution
+    attributes:
+      label: Describe the feature you'd like
+      description: A clear description of what you want the app to do.
+      placeholder: Describe your proposed feature...
+    validations:
+      required: true
+
+  - type: dropdown
+    id: area
+    attributes:
+      label: Which area does this affect?
+      description: Select the part of the app this feature relates to.
+      options:
+        - Kingdom Scanner
+        - Alliance Scanner
+        - Honor Scanner
+        - Seed Scanner
+        - Settings / Configuration
+        - UI / Interface
+        - Output / Export
+        - Installation / Setup
+        - Other
+    validations:
+      required: true
+
+  - type: textarea
+    id: alternatives
+    attributes:
+      label: Alternatives you've considered
+      description: Any other approaches or workarounds you have thought about.
+    validations:
+      required: false
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Any other details, mockups, or screenshots that help explain the feature.
+    validations:
+      required: false
+
+  - type: checkboxes
+    id: checklist
+    attributes:
+      label: Before submitting
+      options:
+        - label: I searched existing [issues](https://github.com/Nexor255/RoK-Tracker/issues) and this feature has not been requested before.
+          required: true

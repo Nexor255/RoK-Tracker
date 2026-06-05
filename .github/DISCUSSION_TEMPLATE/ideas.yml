@@ -1,0 +1,23 @@
+title: "[Idea]: "
+labels: ["idea"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Share your idea for RoK-Tracker! If you have a well-defined feature with clear requirements, consider [opening a feature request](https://github.com/Nexor255/RoK-Tracker/issues/new?template=feature_request.yml) instead.
+
+  - type: textarea
+    id: idea
+    attributes:
+      label: Describe your idea
+      description: What would you like to see in RoK-Tracker?
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Any mockups, examples, or references that help explain your idea.
+    validations:
+      required: false

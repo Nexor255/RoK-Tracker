@@ -1,0 +1,23 @@
+title: "[Question]: "
+labels: ["question"]
+body:
+  - type: markdown
+    attributes:
+      value: |
+        Before asking, please check the [Wiki](https://github.com/Nexor255/RoK-Tracker/wiki) — your question might already be answered in the [Troubleshooting](https://github.com/Nexor255/RoK-Tracker/wiki/Troubleshooting) page.
+
+  - type: textarea
+    id: question
+    attributes:
+      label: Your question
+      description: Describe what you need help with.
+    validations:
+      required: true
+
+  - type: textarea
+    id: context
+    attributes:
+      label: Additional context
+      description: Any relevant details, screenshots, or log output that might help.
+    validations:
+      required: false
