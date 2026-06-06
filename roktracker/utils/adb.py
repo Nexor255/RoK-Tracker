@@ -116,16 +116,33 @@ class AdvancedAdbClient:
         self.secure_adb_shell(f"input tap {position[0]} {position[1]}")
 
     def secure_adb_screencap(self) -> Image:
+        import io
+        from PIL import Image as PILImage
+        
         result = NewImage(mode="RGB", size=(1, 1))
         for i in range(3):
             try:
-                result = self.device.takeSnapshot(reconnect=True)
-            except:
-                console.print("[red]ADB crashed[/red]")
+                # Use subprocess to call adb exec-out screencap -p
+                # This is much more reliable across different emulators than dtmilano's takeSnapshot
+                cmd = [
+                    self.adb_path,
+                    "-P", str(self.server_port),
+                    "-s", f"localhost:{self.client_port}",
+                    "exec-out", "screencap", "-p"
+                ]
+                process = subprocess.run(cmd, stdout=subprocess.PIPE, stderr=subprocess.PIPE)
+                
+                if process.returncode == 0 and process.stdout:
+                    result = PILImage.open(io.BytesIO(process.stdout)).convert("RGB")
+                    return result
+                else:
+                    # Fallback to older dtmilano takeSnapshot just in case
+                    result = self.device.takeSnapshot(reconnect=True)
+                    return result
+            except Exception as e:
+                console.print(f"[red]ADB screencap failed: {e}[/red]")
                 self.kill_adb()
                 self.start_adb()
-            else:
-                return result
         return result
 
     def adb_send_events(self, input_device_name: str, event_file: str | Path) -> None:

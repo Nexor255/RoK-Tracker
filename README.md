@@ -23,7 +23,7 @@ Originally based on the tool by [nikolakis1919](https://github.com/nikolakis1919
 - [Configuration](#configuration)
 - [Emulator Setup](#emulator-setup)
   - [Bluestacks 5](#bluestacks-5)
-  - [LD Player (Experimental)](#ld-player-experimental)
+  - [LD Player 9 (Experimental)](#ld-player-9-experimental)
 - [Output Formats](#output-formats)
 - [Building from Source](#building-from-source)
 - [Architecture](#architecture)
@@ -79,7 +79,7 @@ Originally based on the tool by [nikolakis1919](https://github.com/nikolakis1919
 - **Multiple OCR engines** — Tesseract and EasyOCR with configurable fallback order
 - **Multiple output formats** — XLSX, CSV, and JSONL
 - **Modern GUI** — built with Vue 3, shadcn-vue, and Tailwind CSS
-- **Emulator support** — Bluestacks 5 (recommended) and LD Player (experimental)
+- **Emulator support** — Bluestacks 5 (recommended) and LD Player 9 (experimental)
 - **Configurable timings** — fine-tune delays for different system speeds
 - **Automatic updates** — get notified of new versions and update with one click, no manual downloads needed
 
@@ -98,7 +98,7 @@ Originally based on the tool by [nikolakis1919](https://github.com/nikolakis1919
 | Requirement            | Details                                                                                                                   |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------- |
 | **OS**                 | Windows 10 or 11 (64-bit)                                                                                                 |
-| **Emulator**           | [Bluestacks 5](https://www.bluestacks.com/bluestacks-5.html) (recommended) or LD Player                                   |
+| **Emulator**           | [Bluestacks 5](https://www.bluestacks.com/bluestacks-5.html) (recommended) or LD Player 9                                 |
 | **Tesseract Data**     | [Trained models](https://github.com/tesseract-ocr/tessdata) — place in `deps/tessdata/`                                   |
 | **ADB Platform Tools** | [Download](https://dl.google.com/android/repository/platform-tools_r31.0.3-windows.zip) — place in `deps/platform-tools/` |
 
@@ -209,7 +209,7 @@ Available settings include:
 
 - **Scan** — kingdom name, number of governors, resume, scroll mode, inactive tracking, power/kill validation, kill reconstruction, and output formats (XLSX, CSV, JSONL)
 - **OCR** — engine fallback order (Tesseract / EasyOCR), page segmentation mode, OCR engine mode, languages, and GPU toggle
-- **Emulator** — emulator type (Bluestacks or LD Player), instance name, config file path, and ADB port
+- **Emulator** — emulator type (Bluestacks or LD Player 9), instance name, config file path, and ADB port
 
 ---
 
@@ -235,9 +235,9 @@ Configure your Bluestacks instance with these **required** settings:
 2. Ensure the Bluestacks instance name in Settings matches your instance exactly
 3. If no `bluestacks.conf` file exists, your installation likely uses a fixed port (default: `5555`)
 
-### LD Player (Experimental)
+### LD Player 9 (Experimental)
 
-Select **LD Player** as the emulator in the app's **Settings** page. LD Player support is experimental — Bluestacks 5 is recommended for the most reliable experience.
+Select **LD Player 9** as the emulator in the app's **Settings** page. LD Player 9 support is experimental — Bluestacks 5 is recommended for the most reliable experience.
 
 ---
 
@@ -349,7 +349,7 @@ The installer will be created at:
 
 **GitHub Discussions:** Post questions in [GitHub Discussions](https://github.com/Nexor256/RoK-Tracker/discussions).
 
-**Discord:** `cyrexxis` — available on the official RoK Server and the Chisgule server.
+**Discord:** `Castle256_` — available on the official RoK Server
 
 When requesting help, please include:
 
