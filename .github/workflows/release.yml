@@ -21,22 +21,21 @@ jobs:
       - name: Checkout repository
         uses: actions/checkout@v4
 
-      # ── Python (for Nuitka sidecar) ───────────────────────────
-      - name: Set up Python 3.12
-        uses: actions/setup-python@v5
+      - name: Install uv
+        uses: astral-sh/setup-uv@v5
+
+      - name: Set up Python 3.14
+        uses: actions/setup-python@v6
         with:
-          python-version: "3.12"
+          python-version: "3.14"
           architecture: "x64"
 
       - name: Install Python dependencies
-        run: |
-          python -m pip install --upgrade pip wheel setuptools
-          python -m pip install -r requirements_win64.txt
-          python -m pip install nuitka
+        run: uv sync --frozen
 
       # ── Bundle Python sidecar with Nuitka ─────────────────────
       - name: Build Nuitka sidecar
-        run: python scripts/bundle_sidecar.py
+        run: uv run scripts/bundle_sidecar.py
 
       # ── Node.js + pnpm (for Vue frontend) ─────────────────────
       - name: Set up Node.js 22
@@ -69,6 +68,19 @@ jobs:
           restore-keys: ${{ runner.os }}-cargo-
 
       # ── Build Tauri installer ─────────────────────────────────
+      - name: Inject version from Git tag
+        shell: bash
+        run: |
+          VERSION="${GITHUB_REF_NAME#v}"
+          echo "Updating app version to $VERSION"
+          node -e "
+            const fs = require('fs');
+            const file = 'src-tauri/tauri.conf.json';
+            const data = JSON.parse(fs.readFileSync(file));
+            data.version = '$VERSION';
+            fs.writeFileSync(file, JSON.stringify(data, null, 2));
+          "
+
       - name: Build Tauri app
         env:
           TAURI_SIGNING_PRIVATE_KEY: ${{ secrets.TAURI_SIGNING_PRIVATE_KEY }}
@@ -83,9 +95,16 @@ jobs:
           echo "| Item | Value |" >> $GITHUB_STEP_SUMMARY
           echo "|------|-------|" >> $GITHUB_STEP_SUMMARY
           echo "| Tag | \`${GITHUB_REF_NAME}\` |" >> $GITHUB_STEP_SUMMARY
-          echo "| Python | 3.12 (x64) |" >> $GITHUB_STEP_SUMMARY
+          echo "| Python | 3.14 (x64) |" >> $GITHUB_STEP_SUMMARY
           echo "| Node | 22 |" >> $GITHUB_STEP_SUMMARY
           echo "| Rust | stable |" >> $GITHUB_STEP_SUMMARY
+
+      - name: Rename installer
+        shell: bash
+        working-directory: src-tauri/target/release/bundle/nsis
+        run: |
+          mv *.exe RoK-Tracker-Suite-setup.exe
+          mv *.sig RoK-Tracker-Suite-setup.exe.sig
 
       # ── Upload artifacts ──────────────────────────────────────
       - name: Upload NSIS installer

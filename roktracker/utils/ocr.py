@@ -37,6 +37,8 @@ def preprocessImage(
     border_size: int,
     invert: bool = False,
 ) -> MatLike:
+    if image is None or image.size == 0:
+        return np.zeros((1, 1), dtype=np.uint8)
     im_big = cv2.resize(image, (0, 0), fx=scale_factor, fy=scale_factor)
     im_gray = cv2.cvtColor(im_big, cv2.COLOR_BGR2GRAY)
     if invert:
@@ -62,6 +64,8 @@ def preprocessImageRobust(
     before binarising.  Falls back to the legacy path when the input is already
     single-channel.
     """
+    if image is None or image.size == 0:
+        return np.zeros((1, 1), dtype=np.uint8)
     im_big = cv2.resize(image, (0, 0), fx=scale_factor, fy=scale_factor)
 
     if len(im_big.shape) == 3 and im_big.shape[2] >= 3:

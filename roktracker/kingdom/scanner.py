@@ -46,6 +46,9 @@ def get_clipboard_text_ctypes() -> str:
     kernel32.GlobalUnlock.argtypes = [wintypes.HANDLE]
     kernel32.GlobalUnlock.restype = wintypes.BOOL
     
+    kernel32.GlobalSize.argtypes = [wintypes.HANDLE]
+    kernel32.GlobalSize.restype = ctypes.c_size_t
+    
     CF_UNICODETEXT = 13
     
     if not user32.OpenClipboard(None):
@@ -61,7 +64,13 @@ def get_clipboard_text_ctypes() -> str:
             raise RuntimeError("Failed to lock clipboard data")
         
         try:
-            val = ctypes.c_wchar_p(ptr).value
+            size = kernel32.GlobalSize(handle)
+            if size > 0:
+                raw_bytes = ctypes.string_at(ptr, size)
+                val = raw_bytes.decode('utf-16-le', errors='ignore')
+            else:
+                val = ctypes.c_wchar_p(ptr).value
+                
             if not val:
                 raise RuntimeError("Clipboard is empty")
             return val
@@ -70,6 +79,14 @@ def get_clipboard_text_ctypes() -> str:
     finally:
         user32.CloseClipboard()
 
+def empty_clipboard():
+    user32 = ctypes.windll.user32
+    if not user32.OpenClipboard(None):
+        return
+    try:
+        user32.EmptyClipboard()
+    finally:
+        user32.CloseClipboard()
 
 def parse_clipboard_parcel(raw: str) -> str:
     """Extract clipboard text from Android 'service call clipboard' parcel output.
@@ -284,27 +301,62 @@ class KingdomScanner:
     def set_output_handler(self, cb: Callable[[str], None]):
         self.output_handler = cb
 
+    def _get_android_api_level(self) -> int:
+        """Get the Android API level of the connected emulator (cached)."""
+        if hasattr(self, '_android_api_level'):
+            return self._android_api_level
+        try:
+            result = self.adb_client.secure_adb_shell(
+                "getprop ro.build.version.sdk"
+            )
+            level = int(result.strip())
+            self._android_api_level = level
+            logger.info(f"Detected Android API level: {level}")
+            return level
+        except Exception as e:
+            logger.debug(f"Failed to detect Android API level: {e}")
+            self._android_api_level = 0
+            return 0
+
     def _read_clipboard_via_adb(self) -> str:
         """Read clipboard text directly from the Android emulator via ADB.
 
-        Tries multiple ADB methods in order of reliability.
-        This bypasses the emulator's (often broken) clipboard sync to Windows.
+        The clipboard service method number for getPrimaryClip depends on
+        the Android version:
+          - Android 5-8  (API 21-27): method 2 = getPrimaryClip
+          - Android 9+   (API 28+) : method 3 = getPrimaryClip
+                                      method 2 = clearPrimaryClip (destructive!)
+        We detect the API level once and use the correct method.
         """
-        # Method 1: service call clipboard (Android 5+)
-        try:
-            raw = self.adb_client.secure_adb_shell(
-                "service call clipboard 2 s16 com.android.shell"
-            )
-            # logger.info(f"ADB clipboard raw: {raw[:300]!r}")
-            parsed = parse_clipboard_parcel(raw)
-            if parsed:
-                logger.info(f"ADB clipboard parsed name: {parsed!r}")
-                return parsed
-            else:
-                logger.info("ADB clipboard parse returned empty")
-        except Exception as e:
-            logger.debug(f"ADB clipboard service call failed: {e}")
+        api_level = self._get_android_api_level()
 
+        if api_level >= 28:
+            # Android 9+: getPrimaryClip is method 3.
+            # Method 2 is clearPrimaryClip — must NOT be called.
+            methods = [3]
+        elif api_level > 0:
+            # Android 5-8: getPrimaryClip is method 2.
+            methods = [2]
+        else:
+            # Unknown version: try 3 first (safe read-only on all versions),
+            # then 2 as fallback.
+            methods = [3, 2]
+
+        for method_num in methods:
+            try:
+                raw = self.adb_client.secure_adb_shell(
+                    f"service call clipboard {method_num} s16 com.android.shell"
+                )
+                parsed = parse_clipboard_parcel(raw)
+                if parsed:
+                    logger.info(
+                        f"ADB clipboard (method {method_num}) parsed name: {parsed!r}"
+                    )
+                    return parsed
+            except Exception as e:
+                logger.debug(f"ADB clipboard method {method_num} failed: {e}")
+
+        logger.info("ADB clipboard parse returned empty")
         return ""
 
     def _copy_governor_name(self, tap_positions: dict) -> str:
@@ -317,6 +369,9 @@ class KingdomScanner:
           3. Fall back to reading the Windows clipboard
         """
         for attempt in range(3):
+            # Clear Windows clipboard before copying so we can detect when the new value arrives
+            empty_clipboard()
+            
             # Tap the name-copy button
             self.adb_client.secure_adb_tap(tap_positions["name_copy"])
             wait_random_range(
@@ -333,7 +388,9 @@ class KingdomScanner:
                 try:
                     name = get_clipboard_text_ctypes()
                     if name:
-                        return name
+                        cleaned = clean_clipboard_name(name)
+                        if cleaned:
+                            return cleaned
                 except Exception:
                     pass
                 time.sleep(0.1)
