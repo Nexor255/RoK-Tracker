@@ -1,7 +1,7 @@
 # RokTracker
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python 3.13+](https://img.shields.io/badge/Python-3.13%2B-3776AB.svg)](https://www.python.org/)
+[![Python 3.14+](https://img.shields.io/badge/Python-3.14%2B-3776AB.svg)](https://www.python.org/)
 [![Tauri v2](https://img.shields.io/badge/Tauri-v2-FFC131.svg)](https://tauri.app/)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D6.svg)](#requirements)
 
@@ -43,8 +43,7 @@ The main scanner — configure presets, fine-tune timings, and track every gover
   <img src="images/kingdom.png" alt="Kingdom Scanner" width="800">
 </p>
 
-### Alliance Scanner &nbsp;&nbsp;|&nbsp;&nbsp; Honor Scanner &nbsp;&nbsp;|&nbsp;&nbsp; Seed Scanner
-
+<h3 align="center">Alliance Scanner &nbsp;&nbsp;|&nbsp;&nbsp; Honor Scanner &nbsp;&nbsp;|&nbsp;&nbsp; Seed Scanner</h3>
 <p align="center">
   <img src="images/alliance.png" alt="Alliance Scanner" width="270">
   &nbsp;&nbsp;
@@ -116,7 +115,7 @@ The main scanner — configure presets, fine-tune timings, and track every gover
 | **Tesseract Data**     | [Trained models](https://github.com/tesseract-ocr/tessdata) — place in `deps/tessdata/`                                   |
 | **ADB Platform Tools** | [Download](https://dl.google.com/android/repository/platform-tools_r31.0.3-windows.zip) — place in `deps/platform-tools/` |
 
-> For building from source, you also need: [Python 3.13+](https://www.python.org/downloads/), [Node.js 18+](https://nodejs.org/), [Rust](https://rustup.rs/), and [pnpm](https://pnpm.io/).
+> For building from source, you also need: [Python 3.14+](https://www.python.org/downloads/), [Node.js 18+](https://nodejs.org/), [Rust](https://rustup.rs/), and [pnpm](https://pnpm.io/).
 
 ---
 
