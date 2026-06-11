@@ -34,7 +34,8 @@ impl SidecarManager {
             let project_root = cwd.parent().unwrap_or(&cwd).to_path_buf();
             let script = project_root.join("scanner_sidecar.py");
             eprintln!("[sidecar] Dev mode — script: {}", script.display());
-            ("python".to_string(), vec![script.to_string_lossy().to_string()], project_root)
+            let python_exe = project_root.join(".venv").join("Scripts").join("python.exe");
+            (python_exe.to_string_lossy().to_string(), vec![script.to_string_lossy().to_string()], project_root)
         } else {
             // Tauri places externalBin binaries next to the app executable,
             // keeping the target-triple suffix: scanner_sidecar-{triple}[.exe]

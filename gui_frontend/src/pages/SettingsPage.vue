@@ -4,42 +4,99 @@
     <!-- General Settings -->
     <Card>
       <CardHeader class="pb-3">
-        <CardTitle>General Settings</CardTitle>
-        <CardDescription>Setup emulator connection and paths.</CardDescription>
+        <CardTitle>Emulator Connection</CardTitle>
+        <CardDescription>Select an active emulator or configure manually.</CardDescription>
       </CardHeader>
       <CardContent class="grid gap-4">
-        <div class="grid grid-cols-2 gap-4">
-          <div class="space-y-1">
-            <label class="text-sm font-medium leading-none">Emulator</label>
-            <Select v-model="configStore.config.general.emulator">
-              <SelectTrigger>
-                <SelectValue placeholder="Select an emulator" />
-              </SelectTrigger>
-              <SelectContent>
-                <SelectItem value="bluestacks">BlueStacks</SelectItem>
-                <SelectItem value="nox">Nox</SelectItem>
-                <SelectItem value="ld">LD Player 9</SelectItem>
-                <SelectItem value="memu">MEmu</SelectItem>
-              </SelectContent>
-            </Select>
+        
+        <!-- Detected Emulators -->
+        <div class="space-y-3">
+          <div class="flex items-center justify-between">
+            <label class="text-sm font-medium leading-none">Detected Emulators</label>
+            <Button variant="ghost" size="sm" @click="scanEmulators" :disabled="isScanningEmulators">
+              <RefreshCwIcon class="w-4 h-4 mr-2" :class="{'animate-spin': isScanningEmulators}" />
+              Refresh
+            </Button>
           </div>
-          <Input 
-            v-model="configStore.config.general.bluestacks.name" 
-            label="BlueStacks Instance Name" 
-          />
+          
+          <div v-if="isScanningEmulators" class="flex items-center justify-center p-6 border rounded-md border-dashed border-border/60 bg-muted/20">
+            <svg class="mr-2 h-5 w-5 animate-spin text-muted-foreground" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+              <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4" />
+              <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4z" />
+            </svg>
+            <span class="text-sm text-muted-foreground">Scanning for emulators...</span>
+          </div>
+          <div v-else-if="detectedEmulators.length === 0" class="flex flex-col items-center justify-center p-6 border rounded-md border-dashed border-border/60 bg-muted/20 text-center">
+            <span class="text-sm text-muted-foreground">No active emulators detected.</span>
+            <span class="text-xs text-muted-foreground mt-1">Please ensure your emulator is running, or configure it manually below.</span>
+          </div>
+          <div v-else class="flex flex-col gap-2">
+            <button
+              v-for="emu in detectedEmulators"
+              :key="emu.port"
+              @click="selectEmulator(emu)"
+              class="flex items-center p-3 rounded-md border transition-all duration-200 text-left hover:bg-muted/50 focus:outline-none focus:ring-2 focus:ring-ring"
+              :class="isSelectedEmulator(emu) ? 'border-primary bg-primary/5 ring-1 ring-primary' : 'border-border/60 bg-card'"
+            >
+              <div class="flex-1">
+                <div class="font-medium flex items-center">
+                  <CheckIcon v-if="isSelectedEmulator(emu)" class="w-4 h-4 mr-2 text-primary" />
+                  <div v-else class="w-4 h-4 mr-2"></div>
+                  {{ emu.name }}
+                </div>
+              </div>
+            </button>
+          </div>
         </div>
-        <div class="grid gap-2 mb-2">
-           <label class="text-sm font-medium leading-none">BlueStacks Config Path</label>
-           <Input 
-             v-model="configStore.config.general.bluestacks.config" 
-           />
-        </div>
-        <div class="w-1/2 pr-2">
-          <Input 
-            v-model.number="configStore.config.general.adb_port" 
-            type="number"
-            label="ADB Port" 
-          />
+
+        <!-- Manual Configuration Toggle -->
+        <div class="mt-2 border rounded-md border-border/60 bg-muted/10 overflow-hidden">
+          <button 
+            @click="showManualConfig = !showManualConfig"
+            class="w-full flex items-center justify-between p-3 text-sm font-medium hover:bg-muted/50 transition-colors focus:outline-none"
+          >
+            <span>Manual Configuration</span>
+            <ChevronDownIcon v-if="!showManualConfig" class="w-4 h-4 text-muted-foreground" />
+            <ChevronUpIcon v-else class="w-4 h-4 text-muted-foreground" />
+          </button>
+          
+          <div v-if="showManualConfig" class="p-4 pt-0 border-t border-border/60">
+            <div class="grid gap-4 mt-3">
+              <div class="grid grid-cols-2 gap-4">
+                <div class="space-y-1">
+                  <label class="text-sm font-medium leading-none">Emulator Type</label>
+                  <Select v-model="configStore.config.general.emulator">
+                    <SelectTrigger>
+                      <SelectValue placeholder="Select an emulator" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="bluestacks">BlueStacks</SelectItem>
+                      <SelectItem value="nox">Nox</SelectItem>
+                      <SelectItem value="ld">LD Player 9</SelectItem>
+                      <SelectItem value="memu">MEmu</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <Input 
+                  v-model="configStore.config.general.bluestacks.name" 
+                  label="BlueStacks Instance Name" 
+                />
+              </div>
+              <div class="grid gap-2 mb-2">
+                 <label class="text-sm font-medium leading-none">BlueStacks Config Path</label>
+                 <Input 
+                   v-model="configStore.config.general.bluestacks.config" 
+                 />
+              </div>
+              <div class="w-1/2 pr-2">
+                <Input 
+                  v-model.number="configStore.config.general.adb_port" 
+                  type="number"
+                  label="ADB Port" 
+                />
+              </div>
+            </div>
+          </div>
         </div>
       </CardContent>
     </Card>
@@ -69,7 +126,7 @@
             />
             <div class="absolute -bottom-2 inset-x-0 pointer-events-none flex justify-between px-1.5">
                <!-- Tick marks for the slider -->
-               <div v-for="i in 7" :key="i" class="w-[1px] h-1.5 bg-foreground/20"></div>
+               <div v-for="i in 7" :key="i" class="w-px h-1.5 bg-foreground/20"></div>
             </div>
           </div>
 
@@ -245,7 +302,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, onUnmounted } from 'vue'
+import { CheckIcon, RefreshCwIcon, ChevronDownIcon, ChevronUpIcon } from 'lucide-vue-next'
 import { useConfigStore } from '@/stores/config-store'
 import { Card, CardHeader, CardTitle, CardDescription, CardContent } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
@@ -257,6 +315,42 @@ import * as ipc from '@/lib/tauriClient'
 
 const configStore = useConfigStore()
 const saving = ref(false)
+
+// Emulator Detection State
+const isScanningEmulators = ref(false)
+const showManualConfig = ref(false)
+const detectedEmulators = ref<{ id: string; name: string; port: number }[]>([])
+
+let unlistenEmulators: (() => void) | undefined
+
+onMounted(async () => {
+  unlistenEmulators = await ipc.onSidecarEvent('emulators_detected', (data) => {
+    detectedEmulators.value = data
+    isScanningEmulators.value = false
+  })
+  
+  // Auto-scan on mount
+  scanEmulators()
+})
+
+onUnmounted(() => {
+  if (unlistenEmulators) unlistenEmulators()
+})
+
+const scanEmulators = () => {
+  isScanningEmulators.value = true
+  ipc.detectEmulators()
+}
+
+const isSelectedEmulator = (emu: { id: string; name: string; port: number }) => {
+  return configStore.config.general.emulator === emu.id && 
+         configStore.config.general.adb_port === emu.port
+}
+
+const selectEmulator = (emu: { id: string; name: string; port: number }) => {
+  configStore.config.general.emulator = emu.id
+  configStore.config.general.adb_port = emu.port
+}
 
 const handleSaveConfig = async () => {
   saving.value = true

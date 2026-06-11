@@ -161,3 +161,8 @@ pub fn open_scan_folder(app: tauri::AppHandle, path: String) -> Result<(), Strin
         .map_err(|e| e.to_string())
 }
 
+#[tauri::command]
+pub fn detect_emulators(sidecar: State<'_, SidecarManager>) -> Result<(), String> {
+    send(&sidecar, "DetectEmulators", None)
+}
+

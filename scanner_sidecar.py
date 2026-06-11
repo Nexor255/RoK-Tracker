@@ -11,6 +11,10 @@ import os
 import threading
 from threading import Event, Thread
 from typing import List
+import warnings
+
+# Suppress SyntaxWarnings from third-party libraries (e.g. dtmilano invalid escape sequences)
+warnings.filterwarnings("ignore", category=SyntaxWarning)
 
 # Ensure the project root is on the path
 sys.path.insert(0, os.path.dirname(os.path.abspath(__file__)))
@@ -477,6 +481,13 @@ def cmd_get_scan_folder(args):
     else:
         emit_event("error", f"Unknown scan type: {scan_type}")
 
+
+from roktracker.utils.adb_detector import detect_emulators
+
+@command("DetectEmulators")
+def cmd_detect_emulators(args):
+    emulators = detect_emulators()
+    emit_event("emulators_detected", emulators)
 
 # ---------------------------------------------------------------------------
 # Main loop — read JSON commands from stdin line by line

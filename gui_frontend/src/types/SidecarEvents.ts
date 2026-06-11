@@ -67,6 +67,9 @@ export interface SidecarEventMap {
 
   // Errors
   error: string
+
+  // Emulators
+  emulators_detected: { id: string; name: string; port: number }[]
 }
 
 /** Union of all valid sidecar event names */

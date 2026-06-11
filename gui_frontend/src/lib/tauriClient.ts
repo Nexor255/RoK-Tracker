@@ -159,6 +159,10 @@ export function openScanFolder(path: string): void {
   invoke('open_scan_folder', { path }).catch((e) => console.error('openScanFolder failed:', e))
 }
 
+export function detectEmulators(): void {
+  invoke('detect_emulators').catch((e) => console.error('detectEmulators failed:', e))
+}
+
 // ---- Events (Python → Rust → frontend) ----
 
 import type { SidecarEventMap, SidecarEventName } from '@/types/SidecarEvents'
