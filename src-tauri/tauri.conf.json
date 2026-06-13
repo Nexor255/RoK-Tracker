@@ -3,9 +3,9 @@
   "version": "1.0.0",
   "identifier": "com.roktracker.suite",
   "build": {
-    "beforeDevCommand": "cd gui_frontend && npm run dev",
+    "beforeDevCommand": "cd ../gui_frontend && pnpm run dev",
     "devUrl": "http://localhost:3000",
-    "beforeBuildCommand": "cd gui_frontend && npm run build",
+    "beforeBuildCommand": "cd ../gui_frontend && pnpm run build",
     "frontendDist": "../gui_frontend/dist/spa"
   },
   "app": {
@@ -44,7 +44,7 @@
   },
   "plugins": {
     "updater": {
-      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDQ1MzhFNTYwREMzNzUxQUYKUldTdlVUZmNZT1U0UllWMTljZkJDZnVOWUh1bkhHbkVKUnE4VTBuT3VZTE9aTys4N0ZVS2pncVgK",
+      "pubkey": "dW50cnVzdGVkIGNvbW1lbnQ6IG1pbmlzaWduIHB1YmxpYyBrZXk6IDI4QjUyRDkwMjgzQ0VDN0YKUldSLzdEd29rQzIxS05FT2hVL0tZejBFUDc4ZXZ0WlpBNjRySXgyM25JMGdFeXVpWHVGR3VCTEQK",
       "endpoints": [
         "https://github.com/Nexor256/RoK-Tracker/releases/latest/download/latest.json"
       ],

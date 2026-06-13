@@ -1,44 +1,65 @@
 # RokTracker
 
 [![License: MIT](https://img.shields.io/badge/License-MIT-blue.svg)](LICENSE)
-[![Python 3.12+](https://img.shields.io/badge/Python-3.12%2B-3776AB.svg)](https://www.python.org/)
+[![Python 3.14+](https://img.shields.io/badge/Python-3.14%2B-3776AB.svg)](https://www.python.org/)
 [![Tauri v2](https://img.shields.io/badge/Tauri-v2-FFC131.svg)](https://tauri.app/)
 [![Platform: Windows](https://img.shields.io/badge/Platform-Windows%2010%2F11-0078D6.svg)](#requirements)
 
 **Open-source Rise of Kingdoms stats management tool.** Automatically scan and track the top players in your kingdom, alliance, and honor leaderboards using OCR and ADB.
 
-Originally based on the tool by [nikolakis1919](https://github.com/nikolakis1919/RokTracker) and [Cyrexxis](https://github.com/Cyrexxis/RokTracker), this version features a modern Tauri desktop app with Vue 3 + shadcn-vue UI.
+Originally based on the tool by [nikolakis1919](https://github.com/nikolakis1919/RokTracker) and [Cyrexxis](https://github.com/Cyrexxis/RokTracker), this version features a modern Tauri v2 desktop app with a Vue 3 + shadcn-vue interface, a Nuitka-compiled Python backend, and automatic updates — all bundled into a single Windows installer.
 
 ---
 
 ## Table of Contents
 
+- [App Preview](#app-preview)
+- [What's in this Version](#whats-in-this-version)
 - [Features](#features)
-- [Screenshots](#screenshots)
 - [Requirements](#requirements)
 - [Installation](#installation)
   - [Simple Installation (Installer)](#simple-installation-installer)
-  - [Advanced Installation (From Source)](#advanced-installation-from-source)
+  - [Development & Architecture](#development--architecture)
 - [Usage](#usage)
 - [Configuration](#configuration)
 - [Emulator Setup](#emulator-setup)
   - [Bluestacks 5](#bluestacks-5)
   - [LD Player (Experimental)](#ld-player-experimental)
 - [Output Formats](#output-formats)
-- [Building from Source](#building-from-source)
-- [Architecture](#architecture)
 - [Important Notes](#important-notes)
 - [Troubleshooting & Support](#troubleshooting--support)
+- [Contributing](#contributing)
 - [License](#license)
 
 ---
 
-## 🚀 What's in v1.0.0
+## App Preview
+
+### Kingdom Scanner
+
+The main scanner — configure presets, fine-tune timings, and track every governor stat in real time.
+
+<p align="center">
+  <img src="images/kingdom.png" alt="Kingdom Scanner" width="800">
+</p>
+
+<h3 align="center">Alliance Scanner &nbsp;&nbsp;|&nbsp;&nbsp; Honor Scanner &nbsp;&nbsp;|&nbsp;&nbsp; Seed Scanner</h3>
+<p align="center">
+  <img src="images/alliance.png" alt="Alliance Scanner" width="270">
+  &nbsp;&nbsp;
+  <img src="images/honor.png" alt="Honor Scanner" width="270">
+  &nbsp;&nbsp;
+  <img src="images/seed.png" alt="Seed Scanner" width="270">
+</p>
+
+---
+
+## What's in this Version
 
 - **Tauri v2 desktop app** — replaced PyWebView + Bottle with a native Tauri shell for faster startup and smaller bundle
 - **Modern UI** — rebuilt with Vue 3, shadcn-vue, and Tailwind CSS (dark theme, responsive layout)
 - **Nuitka sidecar** — Python backend compiled with Nuitka (~99 MB, down from ~258 MB with PyInstaller)
-- **Unified installer** — single `.exe` or `.msi` installer, no Python required for end users
+- **Unified installer** — single `.exe` installer, no Python required for end users
 - **All 4 scanners** — Kingdom, Alliance, Honor, and Seed in one application
 - **Auto-updates** — the app automatically checks for new versions and can update itself in-place
 
@@ -46,7 +67,7 @@ Originally based on the tool by [nikolakis1919](https://github.com/nikolakis1919
 
 ---
 
-## ✨ Features
+## Features
 
 ### Kingdom Scanner
 
@@ -76,7 +97,7 @@ Originally based on the tool by [nikolakis1919](https://github.com/nikolakis1919
 
 ### General
 
-- **Multiple OCR engines** — Tesseract and EasyOCR with configurable fallback order
+- **OCR engine** — Tesseract with configurable page segmentation and engine modes
 - **Multiple output formats** — XLSX, CSV, and JSONL
 - **Modern GUI** — built with Vue 3, shadcn-vue, and Tailwind CSS
 - **Emulator support** — Bluestacks 5 (recommended) and LD Player (experimental)
@@ -85,15 +106,7 @@ Originally based on the tool by [nikolakis1919](https://github.com/nikolakis1919
 
 ---
 
-## Screenshots
-
-|        Kingdom Scanner         |         Alliance Scanner         |       Honor Scanner        |       Seed Scanner       |
-| :----------------------------: | :------------------------------: | :------------------------: | :----------------------: |
-| ![Kingdom](images/kingdom.png) | ![Alliance](images/alliance.png) | ![Honor](images/honor.png) | ![Seed](images/seed.png) |
-
----
-
-## 📋 Requirements
+## Requirements
 
 | Requirement            | Details                                                                                                                   |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------- |
@@ -102,18 +115,18 @@ Originally based on the tool by [nikolakis1919](https://github.com/nikolakis1919
 | **Tesseract Data**     | [Trained models](https://github.com/tesseract-ocr/tessdata) — place in `deps/tessdata/`                                   |
 | **ADB Platform Tools** | [Download](https://dl.google.com/android/repository/platform-tools_r31.0.3-windows.zip) — place in `deps/platform-tools/` |
 
-> For building from source, you also need: [Python 3.12+](https://www.python.org/downloads/), [Node.js 18+](https://nodejs.org/), [Rust](https://rustup.rs/), and [pnpm](https://pnpm.io/).
+> For building from source, you also need: [Python 3.14+](https://www.python.org/downloads/), [Node.js 18+](https://nodejs.org/), [Rust](https://rustup.rs/), and [pnpm](https://pnpm.io/).
 
 ---
 
-## 📥 Installation
+## Installation
 
 ### Simple Installation (Installer)
 
 No Python, Node.js, or Rust required — just install and run.
 
 1. **Download** the latest release: **[Latest Release](https://github.com/Nexor256/RoK-Tracker/releases/latest)**
-   - Choose `RoK-Tracker-Suite_1.0.0_x64-setup.exe` (NSIS)
+   - Choose `RoK-Tracker-Suite-setup.exe` (NSIS)
 2. **Run the installer** — follow the setup wizard
 3. **Launch the app once** — it will auto-create the `deps/` folder structure
 4. **Add dependencies** to the `deps/` folder (located next to the installed app):
@@ -122,7 +135,7 @@ No Python, Node.js, or Rust required — just install and run.
 5. **Configure your emulator** ([see Emulator Setup](#emulator-setup))
 6. **Relaunch** the app — you're ready to scan!
 
-> 💡 **Future updates are automatic!** The app will notify you when a new version is available and can update itself with one click — no need redownload the app again.
+> **Tip:** Future updates are automatic! The app will notify you when a new version is available and can update itself with one click — no need to redownload.
 
 > [!WARNING]
 > **Windows Defender False Positive:** The installer bundles a custom Python executable (`scanner_sidecar.exe`) that handles the scanning engine. Because it is heavily compressed and compiled into a single file with Nuitka, **Windows Defender and other antiviruses often falsely flag it as malware** and may silently quarantine it upon installation. If the app gets stuck on the "Initializing Sidecar" loading screen, please check your **Windows Security -> Protection History**, click on the blocked threat, select **Restore / Allow on device**, and restart the app.
@@ -142,144 +155,9 @@ RoK Tracker Suite/                        (install directory)
         └── adb.exe                      ← You download this
 ```
 
-### Advanced Installation (From Source)
+### Development & Architecture
 
-For developers who want to run or modify the code.
-
-**Prerequisites:**
-
-- [Python 3.12+](https://www.python.org/downloads/)
-- [Node.js 18+](https://nodejs.org/) with [pnpm](https://pnpm.io/)
-- [Rust](https://rustup.rs/) (for Tauri)
-- [Microsoft C++ Build Tools](https://visualstudio.microsoft.com/visual-cpp-build-tools/)
-
-**Setup:**
-
-```bash
-# 1. Clone the repository
-git clone https://github.com/Nexor256/RoK-Tracker.git
-cd RokTracker
-
-# 2. Install Python dependencies
-python -m venv venv
-./venv/Scripts/activate
-pip install -r requirements_win64.txt
-
-# 3. Install frontend dependencies
-cd gui_frontend
-pnpm install
-cd ..
-
-# 4. Place ADB and OCR data in deps/ (same as simple installation)
-
-# 5. Run in development mode
-npx --prefix gui_frontend tauri dev
-```
-
-This opens the app with hot-reload — changes to the Vue frontend update instantly.
-
----
-
-## Usage
-
-**From installer:** Launch "RoK Tracker Suite" from the Start Menu.
-
-**From source (development):**
-
-```bash
-npx --prefix gui_frontend tauri dev
-```
-
-The app opens a native window where you can:
-
-- Select which scanner to run (Kingdom, Alliance, Honor, or Seed)
-- Configure scan settings and presets
-- Monitor scan progress in real time
-- View the last scanned governor data
-
-Scan results are saved to the corresponding `scans_*/` folder (e.g., `scans_kingdom/`, `scans_alliance/`).
-
----
-
-## Configuration
-
-All settings can be configured from the **Settings** page inside the application. There is no need to manually edit `config.json`.
-
-Available settings include:
-
-- **Scan** — kingdom name, number of governors, resume, scroll mode, inactive tracking, power/kill validation, kill reconstruction, and output formats (XLSX, CSV, JSONL)
-- **OCR** — engine fallback order (Tesseract / EasyOCR), page segmentation mode, OCR engine mode, languages, and GPU toggle
-- **Emulator** — emulator type (Bluestacks or LD Player), instance name, config file path, and ADB port
-
----
-
-## Emulator Setup
-
-### Bluestacks 5
-
-Configure your Bluestacks instance with these **required** settings:
-
-**Display Tab** ([Screenshot](images/bluestacks-display.png))
-
-- Resolution: **1600 x 900**
-- DPI: **Custom (450)**
-
-**Advanced Tab** ([Screenshot](images/bluestacks-advanced.png))
-
-- Android Debug Bridge: **Turned on**
-
-#### Automatic Port Detection
-
-1. Open the **Settings** page in the app and set the Bluestacks config path to your `bluestacks.conf` file
-   - Usually located at `C:\ProgramData\BlueStacks_nxt\bluestacks.conf`
-2. Ensure the Bluestacks instance name in Settings matches your instance exactly
-3. If no `bluestacks.conf` file exists, your installation likely uses a fixed port (default: `5555`)
-
-### LD Player (Experimental)
-
-Select **LD Player** as the emulator in the app's **Settings** page. LD Player support is experimental — Bluestacks 5 is recommended for the most reliable experience.
-
----
-
-## Output Formats
-
-| Format    | Extension | Description                                     |
-| --------- | --------- | ----------------------------------------------- |
-| **Excel** | `.xlsx`   | Default output — full spreadsheet with all data |
-| **CSV**   | `.csv`    | Comma-separated values for easy import          |
-| **JSONL** | `.jsonl`  | JSON Lines — one JSON object per line           |
-
-Configure which formats to generate in the **Settings** page.
-
----
-
-## 🔨 Building from Source
-
-To build the standalone installer yourself:
-
-```bash
-# 1. Activate your Python virtual environment
-./venv/Scripts/activate
-
-# 2. Bundle the Python sidecar with Nuitka (~20-30 min first time)
-python scripts/bundle_sidecar.py
-
-# 3. Build the Tauri installer
-npx --prefix gui_frontend tauri build
-```
-
-The installer will be created at:
-
-- **NSIS:** `src-tauri/target/release/bundle/nsis/RoK Tracker Suite_x.x.x_x64-setup.exe`
-- **MSI:** `src-tauri/target/release/bundle/msi/RoK Tracker Suite_x.x.x_x64_en-US.msi`
-
-> **Note:** The first Nuitka build takes 20–30 minutes because it compiles Python to C code. Subsequent builds are cached and much faster.
-
----
-
-## 🏗️ Architecture
-
-```
+```text
 ┌─────────────────────────────────────┐
 │           Tauri v2 Shell            │
 │  ┌───────────────────────────────┐  │
@@ -308,9 +186,105 @@ The installer will be created at:
 | **Scanner engine** | Python (Nuitka-compiled)           | OCR, ADB, data processing               |
 | **Auto-updater**   | Tauri Updater Plugin               | Checks GitHub Releases for new versions |
 
+> **Developers:** To build the standalone installer from source, please see the **[Building from Source](https://github.com/Nexor256/RoK-Tracker/wiki/Building-from-Source)** wiki page for full setup instructions.
+
 ---
 
-## ⚠️ Important Notes
+## Usage
+
+**From installer:** Launch "RoK Tracker Suite" from the Start Menu or desktop shortcut.
+
+**From source (development):**
+
+```bash
+npx --prefix gui_frontend tauri dev
+```
+
+The app opens a native window where you can:
+
+1. Select which scanner to run (Kingdom, Alliance, Honor, or Seed)
+2. Configure scan settings and presets on the **Settings** page
+3. Monitor scan progress in real time
+4. View the last scanned governor data
+
+Scan results are saved to the corresponding output folder:
+
+| Scanner  | Output folder     |
+| -------- | ----------------- |
+| Kingdom  | `scans_kingdom/`  |
+| Alliance | `scans_alliance/` |
+| Honor    | `scans_honor/`    |
+| Seed     | `scans_seed/`     |
+
+<p align="center">
+  <img src="images/excel-example.png" alt="Excel output example" width="600">
+</p>
+
+---
+
+## Configuration
+
+All settings can be configured from the **Settings** page inside the application. There is no need to manually edit `config.json`.
+
+Available settings include:
+
+| Category     | Settings                                                                                                                                                 |
+| ------------ | -------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| **Scan**     | Kingdom name, number of governors, resume, scroll mode, inactive tracking, power/kill validation, kill reconstruction, output formats (XLSX, CSV, JSONL) |
+| **OCR**      | Page segmentation mode, OCR engine mode, languages                                                                                                       |
+| **Emulator** | Emulator type (Bluestacks or LD Player), instance name, config file path, ADB port                                                                       |
+
+---
+
+## Emulator Setup
+
+Regardless of which emulator you use, the following display settings are **required**:
+
+| Setting        | Value        |
+| -------------- | ------------ |
+| **Resolution** | 1600 x 900   |
+| **DPI**        | Custom (450) |
+
+### Bluestacks 5
+
+Configure your Bluestacks instance with these settings:
+
+**Display Tab** ([Screenshot](images/bluestacks-display.png)) — set the resolution and DPI listed above.
+
+**Advanced Tab** ([Screenshot](images/bluestacks-advanced.png))
+
+- Android Debug Bridge: **Turned on**
+
+#### Automatic Port Detection
+
+1. Open the **Settings** page in the app and set the Bluestacks config path to your `bluestacks.conf` file
+   - Usually located at `C:\ProgramData\BlueStacks_nxt\bluestacks.conf`
+2. Ensure the Bluestacks instance name in Settings matches your instance exactly
+3. If no `bluestacks.conf` file exists, your installation likely uses a fixed port (default: `5555`)
+
+### LD Player (Experimental)
+
+Select **LD Player** as the emulator in the app's **Settings** page. LD Player support is experimental — Bluestacks 5 is recommended for the most reliable experience.
+
+Configure your LD Player instance with these settings:
+
+**Display Tab** ([Screenshot](images/LD%20Player-dispaly.png)) — set the resolution and DPI listed above.
+
+**Other Settings** ([Screenshot](images/LD%20Player-others.png))
+
+---
+
+## Output Formats
+
+| Format    | Extension | Description                                     |
+| --------- | --------- | ----------------------------------------------- |
+| **Excel** | `.xlsx`   | Default output — full spreadsheet with all data |
+| **CSV**   | `.csv`    | Comma-separated values for easy import          |
+| **JSONL** | `.jsonl`  | JSON Lines — one JSON object per line           |
+
+Configure which formats to generate in the **Settings** page. All selected formats are written simultaneously at the end of each scan.
+
+## Important Notes
 
 ### Before Scanning
 
@@ -333,29 +307,31 @@ The installer will be created at:
 
 ---
 
-## 🛠️ Troubleshooting & Support
+## Troubleshooting & Support
 
-**Common Issues:**
-
-| Problem                             | Solution                                                                                                     |
-| ----------------------------------- | ------------------------------------------------------------------------------------------------------------ |
-| App shows "Config file is missing"  | Ensure `config.json` is next to the app exe                                                                  |
-| "deps not found" or scanner fails   | Create `deps/` folder with ADB and OCR data (see [Installation](#installation))                              |
-| App stuck on "Initializing Sidecar" | Windows Defender likely deleted `scanner_sidecar.exe`. Restore it from Windows Security > Protection History |
-| Sidecar won't start                 | Check `sidecar.log` in the app directory for errors                                                          |
-| Emulator not detected               | Verify ADB is in `deps/platform-tools/` and emulator has ADB enabled                                         |
-
-**Wiki:** Check the [Wiki](https://github.com/Nexor256/RoK-Tracker/wiki/) for detailed guides.
+If you encounter any issues (such as the app not starting, the sidecar failing to initialize, or OCR errors), please check the comprehensive **[Troubleshooting Guide](https://github.com/Nexor256/RoK-Tracker/wiki/Troubleshooting)** on the Wiki.
 
 **GitHub Discussions:** Post questions in [GitHub Discussions](https://github.com/Nexor256/RoK-Tracker/discussions).
 
-**Discord:** `cyrexxis` — available on the official RoK Server and the Chisgule server.
+**Discord:** `Castle256_` — available on the official RoK Server
 
 When requesting help, please include:
 
 - A clear description of the problem
 - Your `sidecar.log` file (in the app directory)
 - Your `config.json` file (remove sensitive paths before sharing)
+
+---
+
+## Contributing
+
+Contributions are welcome! Here's how you can help:
+
+- **Report bugs** — open an [issue](https://github.com/Nexor256/RoK-Tracker/issues) with your `sidecar.log` and a description of the problem
+- **Suggest features** — start a thread in [GitHub Discussions](https://github.com/Nexor256/RoK-Tracker/discussions)
+- **Submit a pull request** — fork the repo, create a branch, and open a PR against `main`
+
+Please see [Advanced Installation (From Source)](#advanced-installation-from-source) to set up a development environment.
 
 ---
 
