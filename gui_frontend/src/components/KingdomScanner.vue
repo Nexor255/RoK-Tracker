@@ -1,7 +1,7 @@
 <template>
-  <div class="grid grid-cols-1 gap-4 lg:grid-cols-[repeat(24,minmax(0,1fr))] min-h-0">
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-[200px_11fr_8fr] min-h-0 h-full">
     <!-- Left Column: Controls (Presets & Tree) -->
-    <Card class="flex flex-col gap-4 p-4 lg:col-span-5 min-h-0 overflow-y-auto">
+    <Card class="flex flex-col gap-4 p-4 min-h-0 overflow-y-auto">
       <!-- Scan Preset -->
       <div class="space-y-1.5">
         <label class="text-sm font-medium">Scan Preset</label>
@@ -34,28 +34,64 @@
 
       <Separator />
 
+      <!-- Info Tree Header -->
+      <div class="flex items-center justify-between mb-2 mt-1 pr-2">
+        <span class="text-sm font-medium text-muted-foreground">Fields to scan</span>
+        <div class="flex gap-1">
+          <Button variant="ghost" size="icon" class="h-6 w-6" @click="expandAll" title="Expand All">
+            <UnfoldVertical class="h-3.5 w-3.5 text-muted-foreground" />
+          </Button>
+          <Button
+            variant="ghost"
+            size="icon"
+            class="h-6 w-6"
+            @click="collapseAll"
+            title="Collapse All"
+          >
+            <FoldVertical class="h-3.5 w-3.5 text-muted-foreground" />
+          </Button>
+        </div>
+      </div>
+
       <!-- Info Tree (checkboxes) -->
-      <div class="flex-1 overflow-y-auto">
+      <div class="flex-1 overflow-y-auto pr-2">
         <div v-for="group in infoToScan" :key="group.label" class="space-y-1.5">
-          <div class="flex items-center gap-2">
+          <div class="flex items-center gap-2 w-full">
             <Checkbox
               :checked="isGroupChecked(group)"
               @update:checked="toggleGroup(group, $event)"
               :disabled="scanRunning"
             />
-            <span class="text-sm font-medium">{{ group.label }}</span>
+            <span class="text-sm font-medium truncate">{{ group.label }}</span>
           </div>
           <div v-if="group.children" class="ml-4 space-y-1.5">
-            <div v-for="subGroup in group.children" :key="subGroup.label" class="space-y-1">
-              <div class="flex items-center gap-2">
+            <div v-for="subGroup in group.children" :key="subGroup.label" class="space-y-1 w-full">
+              <div class="flex items-center gap-2 w-full">
                 <Checkbox
                   :checked="isGroupChecked(subGroup)"
                   @update:checked="toggleGroup(subGroup, $event)"
                   :disabled="scanRunning"
                 />
-                <span class="text-xs font-medium text-muted-foreground">{{ subGroup.label }}</span>
+                <div
+                  class="flex-1 min-w-0 flex items-center justify-between cursor-pointer select-none group/section"
+                  @click="toggleSection(subGroup.label)"
+                >
+                  <span
+                    class="text-xs font-medium text-muted-foreground group-hover/section:text-foreground transition-colors truncate mr-1"
+                  >
+                    {{ subGroup.label }} ({{ subGroup.children?.length ?? 0 }})
+                  </span>
+                  <component
+                    :is="collapsedSections[subGroup.label] ? ChevronRight : ChevronDown"
+                    class="h-3.5 w-3.5 shrink-0 text-muted-foreground group-hover/section:text-foreground transition-colors"
+                  />
+                </div>
               </div>
-              <div v-if="subGroup.children" class="ml-4 space-y-1">
+              <div
+                v-show="!collapsedSections[subGroup.label]"
+                v-if="subGroup.children"
+                class="ml-4 space-y-1"
+              >
                 <div
                   v-for="leaf in subGroup.children"
                   :key="leaf.label"
@@ -96,7 +132,7 @@
     </Card>
 
     <!-- Middle Column: Form Settings -->
-    <div class="flex flex-col gap-6 lg:col-span-11 min-h-0 overflow-y-auto pr-1">
+    <div class="flex flex-col gap-6 min-h-0 overflow-y-auto pr-1">
       <div class="flex flex-col gap-6">
         <!-- General -->
         <div class="grid grid-cols-2 gap-4">
@@ -127,6 +163,7 @@
 
         <div class="grid grid-cols-2 gap-4">
           <Input
+            v-if="configStore.config.general.emulator === 'bluestacks'"
             v-model="configStore.config.general.bluestacks.name"
             label="Emulator name"
             hint="BlueStacks instance name"
@@ -263,10 +300,9 @@
     </div>
 
     <!-- Right Column: Results & Status -->
-    <div class="flex flex-col gap-4 lg:col-span-8 min-h-0">
-      <div class="flex-1 flex flex-col gap-4 min-h-0">
-        <!-- We use flex-1 on this div so the inner components can stretch or scroll if necessary. -->
-        <LastGovernor class="flex-1" />
+    <div class="flex flex-col min-h-0">
+      <div class="flex-1 flex flex-col gap-2">
+        <LastGovernor />
         <ScanStatus
           class="mt-auto"
           :scan-id="kingdomStore.scanID"
@@ -329,7 +365,7 @@
 <script setup lang="ts">
 import { computed, ref, watch, onMounted, onUnmounted } from 'vue'
 import { storeToRefs } from 'pinia'
-import { Trash2 } from 'lucide-vue-next'
+import { Trash2, ChevronDown, ChevronRight, FoldVertical, UnfoldVertical } from 'lucide-vue-next'
 import { Button } from '@/components/ui/button'
 import { Input } from '@/components/ui/input'
 import { Switch } from '@/components/ui/switch'
@@ -535,6 +571,26 @@ const toggleLeaf = (label: SelectionValue, checked: boolean) => {
     configStore.selectedKingdomOptions.selections =
       configStore.selectedKingdomOptions.selections.filter((s) => s !== label)
   }
+}
+
+const collapsedSections = ref<Record<string, boolean>>({})
+
+const toggleSection = (label: string) => {
+  collapsedSections.value[label] = !collapsedSections.value[label]
+}
+
+const expandAll = () => {
+  collapsedSections.value = {}
+}
+
+const collapseAll = () => {
+  const newCollapsed: Record<string, boolean> = {}
+  infoToScan.forEach((group) => {
+    group.children?.forEach((subGroup) => {
+      newCollapsed[subGroup.label] = true
+    })
+  })
+  collapsedSections.value = newCollapsed
 }
 
 // ---- Scan control ----

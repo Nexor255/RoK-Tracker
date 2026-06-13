@@ -1,7 +1,8 @@
 <template>
-  <Card class="flex h-full flex-col">
-    <CardHeader class="pb-2">
-      <CardTitle>{{ kingdomStore.lastGovernor.name }}</CardTitle>
+  <TooltipProvider>
+    <Card class="flex flex-col">
+      <CardHeader class="pb-2">
+      <CardTitle>{{ kingdomStore.lastGovernor.name }} #{{ kingdomStore.status.current_governor }}</CardTitle>
       <CardDescription
         >with id
         <span class="font-medium text-primary">{{
@@ -12,7 +13,7 @@
 
     <Separator />
 
-    <CardContent class="flex-1 overflow-auto py-3 px-4">
+    <CardContent class="overflow-auto py-3 px-4">
       <!-- General -->
       <div class="space-y-1 text-sm">
         <div class="flex justify-between">
@@ -29,50 +30,62 @@
         </div>
         <div class="flex justify-between">
           <span>Alliance</span>
-          <span class="text-muted-foreground truncate ml-4 text-right">{{ kingdomStore.lastGovernor.alliance }}</span>
+          <span class="text-muted-foreground truncate ml-4 text-right">{{
+            kingdomStore.lastGovernor.alliance
+          }}</span>
         </div>
       </div>
 
       <!-- Kills & Economy — unified stats box -->
-      <div class="mt-3 rounded-lg bg-muted/50 dark:bg-muted/25 p-3 border border-border/60 dark:border-border/40">
+      <div
+        class="mt-3 rounded-lg bg-muted/50 dark:bg-muted/25 p-3 border border-border/60 dark:border-border/40"
+      >
         <div class="grid grid-cols-2 gap-x-5 gap-y-1 text-sm">
-          <TooltipProvider v-for="stat in killStats" :key="stat.label">
+          <template v-for="stat in killStats" :key="stat.label">
             <div class="flex items-center justify-between gap-2">
               <span class="text-muted-foreground">{{ stat.label }}</span>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <span class="tabular-nums cursor-default">{{ formatCompactNumber(stat.value) }}</span>
+                  <span class="tabular-nums cursor-default">{{
+                    formatCompactNumber(stat.value)
+                  }}</span>
                 </TooltipTrigger>
                 <TooltipContent side="left">{{ formatNumber(stat.value) }}</TooltipContent>
               </Tooltip>
             </div>
-          </TooltipProvider>
+          </template>
         </div>
         <Separator class="my-2.5" />
         <div class="flex items-center justify-between text-sm">
           <span class="font-medium">Deaths</span>
-          <span class="font-medium text-primary tabular-nums">{{ formatNumber(kingdomStore.lastGovernor.dead) }}</span>
+          <span class="font-medium text-primary tabular-nums">{{
+            formatNumber(kingdomStore.lastGovernor.dead)
+          }}</span>
         </div>
         <Separator class="my-2.5" />
         <div class="grid grid-cols-2 gap-x-5 gap-y-1 text-sm">
-          <TooltipProvider v-for="stat in econStats" :key="stat.label">
+          <template v-for="stat in econStats" :key="stat.label">
             <div class="flex items-center justify-between gap-2">
               <span class="text-muted-foreground">{{ stat.label }}</span>
               <Tooltip>
                 <TooltipTrigger as-child>
-                  <span class="tabular-nums cursor-default">{{ formatCompactNumber(stat.value) }}</span>
+                  <span class="tabular-nums cursor-default">{{
+                    formatCompactNumber(stat.value)
+                  }}</span>
                 </TooltipTrigger>
                 <TooltipContent side="left">{{ formatNumber(stat.value) }}</TooltipContent>
               </Tooltip>
             </div>
-          </TooltipProvider>
+          </template>
         </div>
       </div>
 
       <!-- City Hall — standalone -->
       <div class="mt-3 flex items-center justify-between text-sm">
         <span class="font-medium">City Hall</span>
-        <span class="font-medium text-primary tabular-nums">{{ kingdomStore.lastGovernor.city_hall_level }}</span>
+        <span class="font-medium text-primary tabular-nums">{{
+          kingdomStore.lastGovernor.city_hall_level
+        }}</span>
       </div>
     </CardContent>
 
@@ -93,68 +106,72 @@
       />
 
       <!-- Scan speed — inline row with dot separators, slightly emphasized -->
-      <div class="flex w-full items-center justify-center rounded-md bg-muted/40 dark:bg-muted/20 py-1.5 text-xs tabular-nums mt-1">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <span class="text-primary font-medium cursor-help">{{ kingdomStore.status.avg_time_per_governor > 0 ? kingdomStore.status.avg_time_per_governor.toFixed(1) + 's/gov' : '—' }}</span>
-            </TooltipTrigger>
-            <TooltipContent>Average time to scan each governor</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+      <div
+        class="flex w-full items-center justify-center rounded-md bg-muted/40 dark:bg-muted/20 py-1.5 text-xs tabular-nums mt-1"
+      >
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <span class="text-primary font-medium cursor-help">{{
+              kingdomStore.status.avg_time_per_governor > 0
+                ? kingdomStore.status.avg_time_per_governor.toFixed(1) + 's/gov'
+                : '—'
+            }}</span>
+          </TooltipTrigger>
+          <TooltipContent>Average time to scan each governor</TooltipContent>
+        </Tooltip>
         <span class="text-muted-foreground/40 mx-2">•</span>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <span class="text-primary font-medium cursor-help">{{ kingdomStore.status.scan_speed_per_hour > 0 ? Math.round(kingdomStore.status.scan_speed_per_hour) + '/hr' : '—' }}</span>
-            </TooltipTrigger>
-            <TooltipContent>Governors scanned per hour</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <span class="text-primary font-medium cursor-help">{{
+              kingdomStore.status.scan_speed_per_hour > 0
+                ? Math.round(kingdomStore.status.scan_speed_per_hour) + '/hr'
+                : '—'
+            }}</span>
+          </TooltipTrigger>
+          <TooltipContent>Governors scanned per hour</TooltipContent>
+        </Tooltip>
         <span class="text-muted-foreground/40 mx-2">•</span>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <span class="text-primary font-medium cursor-help">{{ kingdomStore.status.elapsed_sec > 0 ? formatDuration(kingdomStore.status.elapsed_sec) : '—' }}</span>
-            </TooltipTrigger>
-            <TooltipContent>Total elapsed scan time</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <span class="text-primary font-medium cursor-help">{{
+              kingdomStore.status.elapsed_sec > 0
+                ? formatDuration(kingdomStore.status.elapsed_sec)
+                : '—'
+            }}</span>
+          </TooltipTrigger>
+          <TooltipContent>Total elapsed scan time</TooltipContent>
+        </Tooltip>
       </div>
 
       <!-- Time info row — short labels to avoid wrapping -->
       <div class="flex w-full items-center justify-between text-xs mt-0.5">
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <span class="text-muted-foreground cursor-help">
-                <UseTimeAgo v-slot="{ timeAgo }" :time="lastUpdate">{{ timeAgo }}</UseTimeAgo>
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>Last Update: {{ lastUpdateFormatted }}</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <span class="text-muted-foreground cursor-help">
+              <UseTimeAgo v-slot="{ timeAgo }" :time="lastUpdate">{{ timeAgo }}</UseTimeAgo>
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>Last Update: {{ lastUpdateFormatted }}</TooltipContent>
+        </Tooltip>
         <span class="text-muted-foreground/60 tabular-nums">
           {{ kingdomStore.status.skipped_governors }}
           {{ kingdomStore.status.skipped_governors === 1 ? 'skip' : 'skips' }}
         </span>
-        <TooltipProvider>
-          <Tooltip>
-            <TooltipTrigger as-child>
-              <span class="text-muted-foreground cursor-help">
-                ETA
-                <UseTimeAgo
-                  v-slot="{ timeAgo }"
-                  :time="expectedFinish"
-                  :show-second="true"
-                  :update-interval="1000"
-                  >{{ timeAgo }}</UseTimeAgo
-                >
-              </span>
-            </TooltipTrigger>
-            <TooltipContent>{{ expectedFinishFormatted }}</TooltipContent>
-          </Tooltip>
-        </TooltipProvider>
+        <Tooltip>
+          <TooltipTrigger as-child>
+            <span class="text-muted-foreground cursor-help">
+              ETA
+              <UseTimeAgo
+                v-slot="{ timeAgo }"
+                :time="expectedFinish"
+                :show-second="true"
+                :update-interval="1000"
+                >{{ timeAgo }}</UseTimeAgo
+              >
+            </span>
+          </TooltipTrigger>
+          <TooltipContent>{{ expectedFinishFormatted }}</TooltipContent>
+        </Tooltip>
       </div>
 
       <!-- CH Verification Progress -->
@@ -174,7 +191,8 @@
         />
       </div>
     </CardFooter>
-  </Card>
+    </Card>
+  </TooltipProvider>
 </template>
 
 <script setup lang="ts">

@@ -1,5 +1,5 @@
 <template>
-  <div class="grid grid-cols-1 gap-4 lg:grid-cols-12 min-h-0">
+  <div class="grid grid-cols-1 gap-4 lg:grid-cols-12 min-h-0 h-full">
     <!-- Left panel: controls -->
     <div class="flex flex-col gap-4 lg:col-span-8 min-h-0 overflow-y-auto pr-1">
       <div class="grid grid-cols-2 gap-4">
@@ -29,6 +29,7 @@
 
       <div class="grid grid-cols-2 gap-4">
         <Input
+          v-if="configStore.config.general.emulator === 'bluestacks'"
           v-model="configStore.config.general.bluestacks.name"
           label="Emulator name"
           hint="BlueStacks instance name"
@@ -82,7 +83,7 @@
 
     <!-- Right panel: batch data + status -->
     <div class="flex flex-col gap-4 lg:col-span-4 min-h-0">
-      <LastBatch class="flex-1" :batchData="store.lastGovernor" :batchStatus="store.status" />
+      <LastBatch :batchData="store.lastGovernor" :batchStatus="store.status" />
       <ScanStatus :scan-id="store.scanID" :status-message="store.statusMessage" />
     </div>
   </div>

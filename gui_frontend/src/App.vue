@@ -17,11 +17,11 @@
     <div class="z-10 flex flex-1 flex-col overflow-hidden">
       <!-- Header -->
       <header
-        class="app-header sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-primary-foreground/10 px-6 text-primary-foreground"
+        class="app-header sticky top-0 z-40 flex h-14 items-center gap-4 border-b border-border/60 bg-background/75 px-6 text-foreground backdrop-blur-xl"
       >
         <div class="flex items-center gap-2.5">
           <div
-            class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary-foreground/15 ring-1 ring-primary-foreground/20"
+            class="flex h-8 w-8 items-center justify-center rounded-lg bg-primary/10 text-primary ring-1 ring-primary/20"
           >
             <Radar class="h-4 w-4" />
           </div>
@@ -29,7 +29,7 @@
         </div>
         <div class="flex-1" />
         <button
-          class="theme-toggle rounded-full p-2 ring-1 ring-primary-foreground/15 transition-colors hover:bg-primary-foreground/15 hover:ring-primary-foreground/25"
+          class="theme-toggle rounded-full p-2 ring-1 ring-border/50 text-muted-foreground transition-colors hover:bg-accent hover:text-accent-foreground hover:ring-border"
           :class="{ 'theme-toggle--toggled': darkMode }"
           @click="() => toggleDarkMode()"
         >
@@ -67,7 +67,7 @@
       <div class="flex flex-1 overflow-hidden">
         <!-- Sidebar Navigation -->
         <nav
-          class="app-sidebar flex w-[128px] shrink-0 flex-col items-center gap-1 border-r bg-sidebar-background/80 p-2 overflow-y-auto scrollbar-hidden backdrop-blur-xl"
+          class="app-sidebar flex w-[120px] shrink-0 flex-col items-center gap-1 border-r bg-sidebar-background/80 p-2 overflow-y-auto scrollbar-hidden backdrop-blur-xl"
         >
           <template v-for="item in navItems" :key="item.to">
             <!-- Coming-soon items render as a disabled div -->
