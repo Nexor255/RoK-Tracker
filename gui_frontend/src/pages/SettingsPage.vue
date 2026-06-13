@@ -69,7 +69,7 @@
             />
             <div class="absolute -bottom-2 inset-x-0 pointer-events-none flex justify-between px-1.5">
                <!-- Tick marks for the slider -->
-               <div v-for="i in 7" :key="i" class="w-[1px] h-1.5 bg-foreground/20"></div>
+               <div v-for="i in 7" :key="i" class="w-px h-1.5 bg-foreground/20"></div>
             </div>
           </div>
 
